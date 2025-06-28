@@ -167,20 +167,20 @@
             @endisset
 
             <!-- Main Content -->
-            <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <main>
                 @if(session('success'))
-                    <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                    <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         {{ session('success') }}
                     </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                    <div class="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         {{ session('error') }}
                     </div>
                 @endif
 
-                {{ $slot }}
+                @yield('content')
             </main>
         </div>
 

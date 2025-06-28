@@ -60,4 +60,87 @@ trait HasImages
             }
         }
     }
+
+    /**
+     * Get image URL from base64 data
+     *
+     * @param string $field
+     * @return string|null
+     */
+    public function getImageUrlFromBase64($field)
+    {
+        if (empty($this->$field)) {
+            return null;
+        }
+
+        $binaryData = $this->$field;
+        
+        // Check if data is already a data URL (starts with 'data:')
+        if (strpos($binaryData, 'data:') === 0) {
+            return $binaryData;
+        }
+
+        // Since data is stored as binary JPEG in database, we need to encode it to base64
+        $base64Data = base64_encode($binaryData);
+        
+        // Detect mime type from binary data
+        $mimeType = $this->detectMimeType($binaryData);
+        
+        return 'data:' . $mimeType . ';base64,' . $base64Data;
+    }
+
+    /**
+     * Detect mime type from binary data
+     *
+     * @param string $binaryData
+     * @return string
+     */
+    private function detectMimeType($binaryData)
+    {
+        try {
+            // Use finfo to detect mime type from binary data
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo === false) {
+                return 'image/jpeg'; // Default fallback
+            }
+            
+            $mimeType = finfo_buffer($finfo, $binaryData);
+            finfo_close($finfo);
+            
+            // Validate mime type
+            if ($mimeType && strpos($mimeType, 'image/') === 0) {
+                return $mimeType;
+            }
+            
+            // Fallback: check file signature manually
+            $signature = substr($binaryData, 0, 4);
+            if ($signature === "\xFF\xD8\xFF\xE0" || $signature === "\xFF\xD8\xFF\xE1" || $signature === "\xFF\xD8\xFF\xDB") {
+                return 'image/jpeg';
+            } elseif (substr($binaryData, 0, 8) === "\x89PNG\r\n\x1a\n") {
+                return 'image/png';
+            } elseif (substr($binaryData, 0, 6) === "GIF87a" || substr($binaryData, 0, 6) === "GIF89a") {
+                return 'image/gif';
+            }
+            
+            return 'image/jpeg'; // Default fallback
+        } catch (\Exception $e) {
+            return 'image/jpeg'; // Safe fallback
+        }
+    }
+
+    /**
+     * Set multiple images from request files
+     *
+     * @param array $files
+     * @param array $attributes
+     * @return void
+     */
+    public function setImagesFromRequest($files, $attributes)
+    {
+        foreach ($attributes as $key => $field) {
+            if (isset($files[$key]) && $files[$key] !== null) {
+                $this->$field = base64_encode(file_get_contents($files[$key]->getRealPath()));
+            }
+        }
+    }
 } 

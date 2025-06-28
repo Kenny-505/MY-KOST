@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use App\Traits\HasImages;
 
 class Kamar extends Model
@@ -44,9 +45,9 @@ class Kamar extends Model
     public function getPhotoUrls()
     {
         return [
-            'foto1' => $this->getImageUrl('foto_kamar1'),
-            'foto2' => $this->getImageUrl('foto_kamar2'),
-            'foto3' => $this->getImageUrl('foto_kamar3')
+            'foto1' => $this->getImageUrlFromBase64('foto_kamar1'),
+            'foto2' => $this->getImageUrlFromBase64('foto_kamar2'),
+            'foto3' => $this->getImageUrlFromBase64('foto_kamar3')
         ];
     }
 
@@ -84,6 +85,14 @@ class Kamar extends Model
     }
 
     /**
+     * Get the booking records for the kamar (plural form).
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'id_kamar');
+    }
+
+    /**
      * Get the pengaduan records for the kamar.
      */
     public function pengaduan(): HasMany
@@ -108,6 +117,22 @@ class Kamar extends Model
     }
 
     /**
+     * Get the paket kamar for this room's type.
+     */
+    public function paketKamar()
+    {
+        return PaketKamar::where('id_tipe_kamar', $this->id_tipe_kamar);
+    }
+
+    /**
+     * Get the paket kamar collection for this room's type.
+     */
+    public function getPaketKamarAttribute()
+    {
+        return PaketKamar::where('id_tipe_kamar', $this->id_tipe_kamar)->get();
+    }
+
+    /**
      * Check if kamar is available
      */
     public function isAvailable(): bool
@@ -125,6 +150,6 @@ class Kamar extends Model
 
     public function getRouteKeyName()
     {
-    return 'id_tipe_kamar';
+        return 'id_kamar';
     }
 }

@@ -125,8 +125,10 @@
                         <div>
                             @isset($pageTitle)
                                 <h1 class="text-2xl font-bold text-gray-900">{{ $pageTitle }}</h1>
+                            @elseif(isset($title))
+                                <h1 class="text-2xl font-bold text-gray-900">@yield('title', 'Admin Dashboard')</h1>
                             @else
-                                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                                <h1 class="text-2xl font-bold text-gray-900">@yield('title', 'Admin Dashboard')</h1>
                             @endisset
                             
                             @isset($breadcrumb)
@@ -146,7 +148,7 @@
                                 <p id="current-date" class="text-gray-500"></p>
                             </div>
 
-                            <!-- Add Button (+ icon) -->
+                            <!-- Header Actions -->
                             @isset($addButton)
                                 <div class="flex items-center">
                                     <a href="{{ $addButtonUrl ?? '#' }}" 
@@ -156,6 +158,8 @@
                                         </svg>
                                     </a>
                                 </div>
+                            @else
+                                @yield('header-actions')
                             @endisset
                         </div>
                     </div>
@@ -175,7 +179,11 @@
                         </div>
                     @endif
 
-                    {{ $slot }}
+                    @isset($slot)
+                        {{ $slot }}
+                    @else
+                        @yield('content')
+                    @endisset
                 </main>
             </div>
         </div>

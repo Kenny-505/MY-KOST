@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\ImageUploadService;
+use App\Services\MidtransService;
+use App\Services\BookingPaymentService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,6 +16,14 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(ImageUploadService::class, function ($app) {
             return new ImageUploadService();
+        });
+
+        $this->app->singleton(MidtransService::class, function ($app) {
+            return new MidtransService();
+        });
+
+        $this->app->singleton(BookingPaymentService::class, function ($app) {
+            return new BookingPaymentService($app->make(MidtransService::class));
         });
     }
 

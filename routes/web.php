@@ -13,6 +13,7 @@ use App\Http\Controllers\User\RoomController as UserRoomController;
 use App\Http\Controllers\User\BookingController as UserBookingController;
 use App\Http\Controllers\Penghuni\HistoryController as PenghuniHistoryController;
 use App\Http\Controllers\Penghuni\PengaduanController as PenghuniPengaduanController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -78,9 +79,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 Route::middleware(['auth', 'verified', 'user'])->prefix('user')->name('user.')->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     
-    // Room Browsing
+    // Room Routes
     Route::get('/rooms', [UserRoomController::class, 'index'])->name('rooms.index');
-    Route::get('/rooms/{kamar}', [UserRoomController::class, 'show'])->name('rooms.show');
+    Route::get('/rooms/{room}', [UserRoomController::class, 'show'])->name('rooms.show');
+    Route::post('/rooms/{room}/check-availability', [UserRoomController::class, 'checkAvailability'])
+        ->name('rooms.check-availability');
     
     // Booking Process
     Route::get('/booking/create', [UserBookingController::class, 'create'])->name('booking.create');
@@ -120,6 +123,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Payment Routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
+    Route::post('/payment/callback', [PaymentController::class, 'handleCallback'])->name('payment.callback');
+    Route::get('/payment/success/{orderId}', [PaymentController::class, 'paymentSuccess'])->name('payment.success');
+    Route::get('/payment/failed/{orderId}', [PaymentController::class, 'paymentFailed'])->name('payment.failed');
 });
 
 require __DIR__.'/auth.php';

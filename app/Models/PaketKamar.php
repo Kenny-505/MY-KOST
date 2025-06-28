@@ -55,8 +55,16 @@ class PaketKamar extends Model
         return $this->hasMany(Booking::class, 'id_paket_kamar');
     }
 
+    /**
+     * Get the booking records for the paket kamar (plural form).
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'id_paket_kamar');
+    }
+
     public function getRouteKeyName()
     {
-    return 'id_tipe_kamar';
+        return 'id_paket_kamar';
     }
 }
