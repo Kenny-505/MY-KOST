@@ -8,8 +8,14 @@
         <!-- Welcome Header -->
         <div class="text-center text-white mb-12">
             <h1 class="text-4xl md:text-5xl font-bold mb-4">
-                Selamat Datang, <span class="text-orange-300">{{ Auth::user()->nama }}!</span>
+                Selamat Datang, <span class="text-orange-300">{{ Auth::user()->nama }}</span>
             </h1>
+            <div class="flex items-center justify-center text-blue-100 mb-6">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-lg">User Verified</span>
+            </div>
             <p class="text-xl text-blue-100 max-w-2xl mx-auto">
                 Temukan kamar kost impian Anda dengan fasilitas terbaik dan harga terjangkau
             </p>
@@ -18,51 +24,33 @@
         <!-- Quick Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <!-- Available Rooms -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-                <div class="flex items-center">
-                    <div class="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h5"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-blue-100 text-sm font-medium">Kamar Tersedia</p>
-                        <p class="text-3xl font-bold text-white">{{ $availableRooms }}</p>
-                        <p class="text-blue-200 text-xs">Siap untuk dihuni</p>
-                    </div>
-                </div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 text-center">
+                <svg class="w-12 h-12 text-white mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h5"></path>
+                </svg>
+                <p class="text-blue-100 text-sm font-medium mb-2">Kamar Tersedia</p>
+                <p class="text-4xl font-bold text-white mb-1">{{ $availableRooms }}</p>
+                <p class="text-blue-200 text-xs">Siap untuk dihuni</p>
             </div>
 
             <!-- Room Types -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-                <div class="flex items-center">
-                    <div class="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-blue-100 text-sm font-medium">Tipe Kamar</p>
-                        <p class="text-3xl font-bold text-white">{{ $roomTypes->count() }}</p>
-                        <p class="text-blue-200 text-xs">Pilihan berbeda</p>
-                    </div>
-                </div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 text-center">
+                <svg class="w-12 h-12 text-white mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                </svg>
+                <p class="text-blue-100 text-sm font-medium mb-2">Tipe Kamar</p>
+                <p class="text-4xl font-bold text-white mb-1">{{ $roomTypes->count() }}</p>
+                <p class="text-blue-200 text-xs">Pilihan berbeda</p>
             </div>
 
             <!-- Your Bookings -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-                <div class="flex items-center">
-                    <div class="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-blue-100 text-sm font-medium">Booking Saya</p>
-                        <p class="text-3xl font-bold text-white">{{ Auth::user()->penghuni()->count() }}</p>
-                        <p class="text-blue-200 text-xs">Total reservasi</p>
-                    </div>
-                </div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 text-center">
+                <svg class="w-12 h-12 text-white mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-blue-100 text-sm font-medium mb-2">Booking Saya</p>
+                <p class="text-4xl font-bold text-white mb-1">{{ Auth::user()->penghuni()->count() }}</p>
+                <p class="text-blue-200 text-xs">Total reservasi</p>
             </div>
         </div>
 
@@ -187,87 +175,72 @@
                 <p class="text-lg text-gray-600">Akses fitur utama dengan mudah dan cepat</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Browse Rooms -->
                 <a href="{{ route('user.rooms.index') }}" 
-                   class="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 p-6 rounded-2xl border border-blue-200 hover:border-blue-300 transition duration-300 transform hover:scale-105 hover:shadow-lg">
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition duration-300">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Cari Kamar</h3>
-                        <p class="text-sm text-gray-600">Temukan kamar yang sesuai dengan kebutuhan Anda</p>
-                    </div>
+                   class="group bg-white p-6 rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition duration-300 transform hover:scale-105 text-center">
+                    <svg class="w-12 h-12 text-blue-500 mx-auto mb-4 group-hover:text-blue-600 transition duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Cari Kamar</h3>
+                    <p class="text-sm text-gray-600">Temukan kamar yang sesuai dengan kebutuhan Anda</p>
                 </a>
 
                 <!-- Make Booking -->
                 <a href="{{ route('user.booking.create') }}" 
-                   class="group bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 p-6 rounded-2xl border border-green-200 hover:border-green-300 transition duration-300 transform hover:scale-105 hover:shadow-lg">
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-600 transition duration-300">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Booking Baru</h3>
-                        <p class="text-sm text-gray-600">Pesan kamar favorit Anda sekarang juga</p>
-                    </div>
+                   class="group bg-white p-6 rounded-2xl border border-gray-200 hover:border-green-300 hover:shadow-lg transition duration-300 transform hover:scale-105 text-center">
+                    <svg class="w-12 h-12 text-green-500 mx-auto mb-4 group-hover:text-green-600 transition duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Booking Baru</h3>
+                    <p class="text-sm text-gray-600">Pesan kamar favorit Anda sekarang juga</p>
                 </a>
 
                 @if(Auth::user()->hasActivePenghuni())
                     <!-- Complaint -->
                     <a href="{{ route('penghuni.pengaduan.index') }}" 
-                       class="group bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 p-6 rounded-2xl border border-orange-200 hover:border-orange-300 transition duration-300 transform hover:scale-105 hover:shadow-lg">
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-600 transition duration-300">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.482 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Pengaduan</h3>
-                            <p class="text-sm text-gray-600">Laporkan masalah atau keluhan Anda</p>
-                        </div>
+                       class="group bg-white p-6 rounded-2xl border border-gray-200 hover:border-orange-300 hover:shadow-lg transition duration-300 transform hover:scale-105 text-center">
+                        <svg class="w-12 h-12 text-orange-500 mx-auto mb-4 group-hover:text-orange-600 transition duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.482 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Pengaduan</h3>
+                        <p class="text-sm text-gray-600">Laporkan masalah atau keluhan Anda</p>
                     </a>
 
                     <!-- Invoice History -->
                     <a href="{{ route('penghuni.history.index') }}" 
-                       class="group bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 p-6 rounded-2xl border border-purple-200 hover:border-purple-300 transition duration-300 transform hover:scale-105 hover:shadow-lg">
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-600 transition duration-300">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Riwayat Invoice</h3>
-                            <p class="text-sm text-gray-600">Lihat riwayat pembayaran dan tagihan</p>
-                        </div>
+                       class="group bg-white p-6 rounded-2xl border border-gray-200 hover:border-purple-300 hover:shadow-lg transition duration-300 transform hover:scale-105 text-center">
+                        <svg class="w-12 h-12 text-purple-500 mx-auto mb-4 group-hover:text-purple-600 transition duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Riwayat Invoice</h3>
+                        <p class="text-sm text-gray-600">Lihat riwayat pembayaran dan tagihan</p>
                     </a>
                 @else
                     <!-- Profile -->
                     <a href="{{ route('profile.edit') }}" 
-                       class="group bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 p-6 rounded-2xl border border-gray-200 hover:border-gray-300 transition duration-300 transform hover:scale-105 hover:shadow-lg">
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-gray-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-600 transition duration-300">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Profil Saya</h3>
-                            <p class="text-sm text-gray-600">Kelola informasi akun Anda</p>
-                        </div>
+                       class="group bg-white p-6 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-lg transition duration-300 transform hover:scale-105 text-center">
+                        <svg class="w-12 h-12 text-gray-500 mx-auto mb-4 group-hover:text-gray-600 transition duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Profil Saya</h3>
+                        <p class="text-sm text-gray-600">Kelola informasi akun Anda</p>
                     </a>
                 @endif
             </div>
         </div>
 
-        <!-- Footer CTA -->
-        <div class="mt-12 text-center bg-gradient-to-r from-blue-600 to-orange-600 rounded-2xl p-8 text-white">
-            <h3 class="text-2xl font-bold mb-4">Butuh Bantuan?</h3>
-            <p class="text-blue-100 mb-6 max-w-2xl mx-auto">
-                Tim customer service kami siap membantu Anda 24/7. Jangan ragu untuk menghubungi kami jika ada pertanyaan.
-            </p>
+                 <!-- Footer CTA -->
+         <div class="mt-12 text-center bg-gradient-to-r from-blue-600 to-orange-600 rounded-2xl p-8 text-white">
+             <div class="flex items-center justify-center mb-4">
+                 <svg class="w-8 h-8 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                 </svg>
+                 <h3 class="text-2xl font-bold">Butuh Bantuan?</h3>
+             </div>
+             <p class="text-blue-100 mb-6 max-w-2xl mx-auto">
+                 Tim customer service kami siap membantu Anda 24/7. Jangan ragu untuk menghubungi kami jika ada pertanyaan.
+             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="tel:+628123456789" 
                    class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-50 transition duration-300">

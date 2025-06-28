@@ -73,11 +73,12 @@ class KamarController extends Controller
             $data = $request->only(['id_tipe_kamar', 'no_kamar', 'deskripsi']);
             $data['status'] = 'Kosong'; // Default status for new rooms
             
-            // Handle image uploads (convert to base64)
+            // Handle image uploads - store as binary data (not base64 encoded)
             for ($i = 1; $i <= 3; $i++) {
                 if ($request->hasFile("foto_kamar$i")) {
                     $image = $request->file("foto_kamar$i");
-                    $data["foto_kamar$i"] = base64_encode(file_get_contents($image->getRealPath()));
+                    // Store binary data directly (not base64 encoded)
+                    $data["foto_kamar$i"] = file_get_contents($image->getRealPath());
                 }
             }
 
@@ -129,11 +130,12 @@ class KamarController extends Controller
 
             $data = $request->only(['id_tipe_kamar', 'no_kamar', 'status', 'deskripsi']);
             
-            // Handle image uploads
+            // Handle image uploads - store as binary data (not base64 encoded)
             for ($i = 1; $i <= 3; $i++) {
                 if ($request->hasFile("foto_kamar$i")) {
                     $image = $request->file("foto_kamar$i");
-                    $data["foto_kamar$i"] = base64_encode(file_get_contents($image->getRealPath()));
+                    // Store binary data directly (not base64 encoded)
+                    $data["foto_kamar$i"] = file_get_contents($image->getRealPath());
                 }
             }
 

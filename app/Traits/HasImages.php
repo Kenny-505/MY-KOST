@@ -73,20 +73,67 @@ trait HasImages
             return null;
         }
 
-        $binaryData = $this->$field;
+        $data = $this->$field;
         
         // Check if data is already a data URL (starts with 'data:')
-        if (strpos($binaryData, 'data:') === 0) {
-            return $binaryData;
+        if (strpos($data, 'data:') === 0) {
+            return $data;
         }
 
-        // Since data is stored as binary JPEG in database, we need to encode it to base64
-        $base64Data = base64_encode($binaryData);
-        
-        // Detect mime type from binary data
-        $mimeType = $this->detectMimeType($binaryData);
+        // Check if the data is a base64 string (legacy format)
+        if ($this->isBase64String($data)) {
+            // Data is stored as base64 string, decode first to get binary
+            $binaryData = base64_decode($data);
+            $mimeType = $this->detectMimeType($binaryData);
+            return 'data:' . $mimeType . ';base64,' . $data;
+        }
+
+        // Data is stored as binary, encode it to base64
+        $base64Data = base64_encode($data);
+        $mimeType = $this->detectMimeType($data);
         
         return 'data:' . $mimeType . ';base64,' . $base64Data;
+    }
+
+    /**
+     * Check if string is a valid base64 encoded string
+     *
+     * @param string $data
+     * @return bool
+     */
+    private function isBase64String($data)
+    {
+        // Basic checks for base64 string
+        if (!is_string($data) || empty($data)) {
+            return false;
+        }
+
+        // Check if string contains only valid base64 characters
+        if (!preg_match('/^[A-Za-z0-9+\/]*={0,2}$/', $data)) {
+            return false;
+        }
+
+        // Try to decode and check if it produces valid binary data
+        $decoded = base64_decode($data, true);
+        if ($decoded === false) {
+            return false;
+        }
+
+        // Check if the decoded data looks like image data
+        if (strlen($decoded) < 10) {
+            return false;
+        }
+
+        // Check for common image file signatures
+        $signature = substr($decoded, 0, 8);
+        if (strpos($signature, "\xFF\xD8\xFF") === 0 || // JPEG
+            strpos($signature, "\x89PNG\r\n\x1a\n") === 0 || // PNG
+            strpos($signature, "GIF87a") === 0 || // GIF87a
+            strpos($signature, "GIF89a") === 0) { // GIF89a
+            return true;
+        }
+
+        return false;
     }
 
     /**
