@@ -127,6 +127,7 @@ Route::middleware('auth')->group(function () {
 
 // Payment Routes
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/payment/form/{pembayaran}', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
     Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
     Route::post('/payment/callback', [PaymentController::class, 'handleCallback'])->name('payment.callback');
     Route::get('/payment/success/{orderId}', [PaymentController::class, 'paymentSuccess'])->name('payment.success');

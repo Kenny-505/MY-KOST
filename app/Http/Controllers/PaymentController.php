@@ -22,6 +22,25 @@ class PaymentController extends Controller
     }
 
     /**
+     * Show payment form
+     *
+     * @param Pembayaran $pembayaran
+     * @return \Illuminate\Http\Response
+     */
+    public function showPaymentForm(Pembayaran $pembayaran)
+    {
+        // Validate user owns this payment
+        if ($pembayaran->id_user !== auth()->id()) {
+            abort(403, 'Unauthorized access to payment.');
+        }
+
+        // Load related data
+        $pembayaran->load(['booking.kamar.tipeKamar', 'booking.paketKamar', 'booking.penghuni.user']);
+
+        return view('payment.form', compact('pembayaran'));
+    }
+
+    /**
      * Create a new payment transaction
      *
      * @param Request $request

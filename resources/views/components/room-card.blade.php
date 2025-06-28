@@ -14,9 +14,9 @@ $imageData = $room->foto_kamar1 ?? null;
 $imageUrl = $imageData ? 'data:image/jpeg;base64,' . base64_encode($imageData) : asset('images/kost-background.png');
 @endphp
 
-<div class="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-200 hover:scale-105 hover:shadow-xl">
+<div class="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-200 hover:scale-105 hover:shadow-xl h-full flex flex-col">
     <!-- Room Image -->
-    <div class="relative h-48 overflow-hidden">
+    <div class="relative h-48 overflow-hidden flex-shrink-0">
         <img src="{{ $imageUrl }}" alt="Kamar {{ $room->no_kamar }}" class="w-full h-full object-cover">
         <div class="absolute top-4 right-4">
             <span class="px-3 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
@@ -31,7 +31,7 @@ $imageUrl = $imageData ? 'data:image/jpeg;base64,' . base64_encode($imageData) :
     </div>
 
     <!-- Room Info -->
-    <div class="p-6">
+    <div class="p-6 flex flex-col flex-grow">
         <!-- Room Number & Type -->
         <div class="mb-3">
             <h3 class="text-xl font-bold text-gray-900 mb-1">Kamar {{ $room->no_kamar }}</h3>
@@ -70,7 +70,10 @@ $imageUrl = $imageData ? 'data:image/jpeg;base64,' . base64_encode($imageData) :
             </div>
         @endif
 
-        <!-- Action Buttons -->
+        <!-- Spacer to push buttons to bottom -->
+        <div class="flex-grow"></div>
+
+        <!-- Action Buttons - Fixed at bottom -->
         <div class="flex gap-2 mt-4">
             <a href="{{ route('user.rooms.show', $room->id_kamar) }}" 
                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-center py-2 px-4 rounded-lg transition-colors duration-200 text-sm font-medium">
@@ -78,7 +81,7 @@ $imageUrl = $imageData ? 'data:image/jpeg;base64,' . base64_encode($imageData) :
             </a>
             
             @if($showBookButton && $room->status === 'Kosong')
-                <a href="{{ route('user.booking.create', ['room' => $room->id_kamar]) }}" 
+                <a href="{{ route('user.booking.create', ['kamar_id' => $room->id_kamar]) }}" 
                    class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-center py-2 px-4 rounded-lg transition-colors duration-200 text-sm font-medium">
                     Booking
                 </a>

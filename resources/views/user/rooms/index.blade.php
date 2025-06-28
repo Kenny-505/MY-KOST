@@ -218,7 +218,7 @@
         @if($rooms->count() > 0)
             <div id="roomsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 @foreach($rooms as $room)
-                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 transform hover:-translate-y-1 h-full flex flex-col">
                         <!-- Room Image -->
                         <div class="relative h-48 bg-gray-200">
                             @php
@@ -270,7 +270,7 @@
                         </div>
 
                         <!-- Room Content -->
-                        <div class="p-6">
+                        <div class="p-6 flex flex-col flex-grow">
                             <div class="flex items-center justify-between mb-3">
                                 <h3 class="text-xl font-bold text-gray-900">Kamar {{ $room->no_kamar }}</h3>
                                 @if($room->tipeKamar && $room->tipeKamar->paketKamar->isNotEmpty())
@@ -312,15 +312,18 @@
                                 @endif
                             </div>
 
-                            <!-- Action Buttons -->
-                            <div class="flex gap-2">
+                            <!-- Spacer to push buttons to bottom -->
+                            <div class="flex-grow"></div>
+
+                            <!-- Action Buttons - Fixed at bottom -->
+                            <div class="flex gap-2 mt-4">
                                 <a href="{{ route('user.rooms.show', $room) }}" 
                                    class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-center py-2 px-4 rounded-lg transition duration-200 text-sm font-medium">
                                     Lihat Detail
                                 </a>
                                 
                                 @if($room->status === 'Kosong')
-                                    <a href="{{ route('user.booking.create', ['room' => $room->id_kamar]) }}" 
+                                    <a href="{{ route('user.booking.create', ['kamar_id' => $room->id_kamar]) }}" 
                                        class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-center py-2 px-4 rounded-lg transition duration-200 text-sm font-medium">
                                         Booking Sekarang
                                     </a>

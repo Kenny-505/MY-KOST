@@ -333,7 +333,7 @@
                     <!-- Book Now Button -->
                     @if($room->status === 'Kosong')
                         <div class="mt-6 pt-6 border-t border-gray-200">
-                            <a href="{{ route('user.booking.create', $room) }}" 
+                            <a href="{{ route('user.booking.create', ['kamar_id' => $room->id_kamar]) }}" 
                                class="block w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center py-4 px-6 rounded-lg hover:from-orange-600 hover:to-orange-700 transition duration-200 font-bold text-lg shadow-lg">
                                 <svg class="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
