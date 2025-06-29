@@ -4,167 +4,161 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kamar;
-use App\Models\TipeKamar;
 use App\Models\PaketKamar;
-use App\Models\AdvanceBooking;
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class RoomController extends Controller
 {
     /**
-     * Display a listing of available rooms
-     *
-     * @param Request $request
-     * @return \Illuminate\View\View
+     * Display a listing of rooms with filtering and search
      */
     public function index(Request $request)
     {
-        $query = Kamar::with(['tipeKamar.paketKamar'])
-            ->where(function($q) {
-                $q->where('status', 'Kosong')
-                  ->orWhere('status', 'Dipesan');
-            });
+        $query = Kamar::with(['tipeKamar']); // Show all rooms with their status
 
-        // Filter by type
-        if ($request->filled('tipe')) {
-            $query->whereHas('tipeKamar', function($q) use ($request) {
-                $q->where('tipe_kamar', $request->tipe);
-            });
-        }
-
-        // Filter by capacity
-        if ($request->filled('kapasitas')) {
-            $query->whereHas('tipeKamar.paketKamar', function($q) use ($request) {
-                $q->where('kapasitas_kamar', $request->kapasitas);
-            });
-        }
-
-        // Filter by price range
-        if ($request->filled(['min_price', 'max_price'])) {
-            $query->whereHas('tipeKamar.paketKamar', function($q) use ($request) {
-                $q->whereBetween('harga', [
-                    $request->min_price,
-                    $request->max_price
-                ]);
-            });
-        }
-
-        // Search by room number or features
+        // Search by room number
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('no_kamar', 'like', "%{$search}%")
-                  ->orWhere('deskripsi', 'like', "%{$search}%")
-                  ->orWhereHas('tipeKamar', function($sq) use ($search) {
-                      $sq->where('fasilitas', 'like', "%{$search}%");
-                  });
+            $query->where('no_kamar', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by room type
+        if ($request->filled('type')) {
+            $query->whereHas('tipeKamar', function ($q) use ($request) {
+                $q->where('tipe_kamar', $request->type);
             });
         }
 
-        // Sort results
-        $sortField = $request->sort_by ?? 'created_at';
-        $sortOrder = $request->sort_order ?? 'desc';
-        
-        if ($sortField === 'price') {
-            // Join with paket_kamar through tipe_kamar to sort by price
-            $query->join('tipe_kamar', 'kamar.id_tipe_kamar', '=', 'tipe_kamar.id_tipe_kamar')
-                  ->join('paket_kamar', 'tipe_kamar.id_tipe_kamar', '=', 'paket_kamar.id_tipe_kamar')
-                  ->orderBy('paket_kamar.harga', $sortOrder)
-                  ->select('kamar.*')
-                  ->distinct();
-        } else {
-            $query->orderBy($sortField, $sortOrder);
+        // Filter by availability status (optional)
+        if ($request->filled('status')) {
+            if ($request->status === 'available') {
+                $query->where('status', 'Kosong')
+                    ->whereDoesntHave('bookings', function ($q) {
+                        $q->where('status_booking', 'Aktif')
+                          ->where('tanggal_selesai', '>=', now());
+                    });
+            } elseif ($request->status === 'occupied') {
+                $query->whereHas('bookings', function ($q) {
+                    $q->where('status_booking', 'Aktif')
+                      ->where('tanggal_selesai', '>=', now());
+                });
+            }
         }
 
-        // Get room types for filter
-        $tipeKamar = TipeKamar::all();
-        
-        // Get min and max prices for filter
-        $priceRange = PaketKamar::select(
-            DB::raw('MIN(harga) as min_price'),
-            DB::raw('MAX(harga) as max_price')
-        )->first();
+        // Filter by capacity (from paket_kamar)
+        if ($request->filled('capacity')) {
+            $query->whereHas('tipeKamar.paketKamar', function ($q) use ($request) {
+                $q->where('kapasitas_kamar', $request->capacity);
+            });
+        }
 
-        $rooms = $query->paginate(12)->withQueryString();
+        // Price range filter
+        if ($request->filled('min_price') || $request->filled('max_price')) {
+            $query->whereHas('tipeKamar.paketKamar', function ($q) use ($request) {
+                if ($request->filled('min_price')) {
+                    $q->where('harga', '>=', $request->min_price);
+                }
+                if ($request->filled('max_price')) {
+                    $q->where('harga', '<=', $request->max_price);
+                }
+            });
+        }
 
-        return view('user.rooms.index', compact(
-            'rooms',
-            'tipeKamar',
-            'priceRange'
-        ));
+        // Sort options
+        $sortBy = $request->get('sort', 'no_kamar');
+        $sortDirection = $request->get('direction', 'asc');
+
+        switch ($sortBy) {
+            case 'price':
+                // Join with paket_kamar to sort by minimum price
+                $query->join('tipe_kamar', 'kamar.id_tipe_kamar', '=', 'tipe_kamar.id_tipe_kamar')
+                    ->join('paket_kamar', 'tipe_kamar.id_tipe_kamar', '=', 'paket_kamar.id_tipe_kamar')
+                    ->select('kamar.*', DB::raw('MIN(paket_kamar.harga) as min_price'))
+                    ->groupBy('kamar.id_kamar')
+                    ->orderBy('min_price', $sortDirection);
+                break;
+            case 'type':
+                $query->join('tipe_kamar', 'kamar.id_tipe_kamar', '=', 'tipe_kamar.id_tipe_kamar')
+                    ->orderBy('tipe_kamar.tipe_kamar', $sortDirection)
+                    ->select('kamar.*');
+                break;
+            default:
+                $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $rooms = $query->paginate(9)->withQueryString();
+
+        // Get filter options for dropdowns
+        $roomTypes = DB::table('tipe_kamar')->pluck('tipe_kamar')->unique();
+        $capacities = DB::table('paket_kamar')->pluck('kapasitas_kamar')->unique()->sort();
+        $priceRange = DB::table('paket_kamar')->selectRaw('MIN(harga) as min, MAX(harga) as max')->first();
+
+        return view('user.rooms.index', compact('rooms', 'roomTypes', 'capacities', 'priceRange'));
     }
 
     /**
-     * Display the specified room
-     *
-     * @param Kamar $room
-     * @return \Illuminate\View\View
+     * Display the specified room with details and booking availability
      */
     public function show(Kamar $room)
     {
         $room->load(['tipeKamar']);
 
-        // Get advance bookings for this room
-        $advanceBookings = AdvanceBooking::where('id_kamar', $room->id_kamar)
-            ->where('status', 'Active')
-            ->where('tanggal_mulai', '>=', now())
+        // Get available packages for this room type
+        $paketKamar = PaketKamar::where('id_tipe_kamar', $room->id_tipe_kamar)
+            ->orderBy('jenis_paket')
+            ->orderBy('jumlah_penghuni')
             ->get();
 
-        // Get available packages for this room type
-        $availablePackages = PaketKamar::where('id_tipe_kamar', $room->id_tipe_kamar)
-            ->orderBy('harga')
+        // Get current bookings to show unavailable dates
+        $currentBookings = Booking::where('id_kamar', $room->id_kamar)
+            ->where('status_booking', 'Aktif')
+            ->where('tanggal_selesai', '>=', now())
+            ->with(['penghuni.user', 'paketKamar'])
             ->get();
 
         return view('user.rooms.show', compact(
             'room',
-            'advanceBookings',
-            'availablePackages'
+            'paketKamar',
+            'currentBookings'
         ));
     }
 
     /**
-     * Check room availability for specific dates
-     *
-     * @param Request $request
-     * @param Kamar $room
-     * @return \Illuminate\Http\JsonResponse
+     * Check room availability for specific dates and package
      */
     public function checkAvailability(Request $request, Kamar $room)
     {
         $request->validate([
-            'start_date' => 'required|date|after:today',
-            'end_date' => 'required|date|after:start_date'
+            'tanggal_mulai' => 'required|date|after_or_equal:today',
+            'tanggal_selesai' => 'required|date|after:tanggal_mulai',
+            'id_paket_kamar' => 'required|exists:paket_kamar,id_paket_kamar'
         ]);
 
-        $startDate = $request->start_date;
-        $endDate = $request->end_date;
+        $tanggalMulai = Carbon::parse($request->tanggal_mulai);
+        $tanggalSelesai = Carbon::parse($request->tanggal_selesai);
 
-        // Check existing bookings
-        $existingBooking = $room->bookings()
-            ->where('status_booking', '!=', 'Dibatalkan')
-            ->where(function($query) use ($startDate, $endDate) {
-                $query->whereBetween('tanggal_mulai', [$startDate, $endDate])
-                    ->orWhereBetween('tanggal_selesai', [$startDate, $endDate]);
+        // Check for overlapping bookings
+        $existingBooking = Booking::where('id_kamar', $room->id_kamar)
+            ->where('status_booking', 'Aktif')
+            ->where(function($query) use ($tanggalMulai, $tanggalSelesai) {
+                $query->whereBetween('tanggal_mulai', [$tanggalMulai, $tanggalSelesai])
+                      ->orWhereBetween('tanggal_selesai', [$tanggalMulai, $tanggalSelesai])
+                      ->orWhere(function($q) use ($tanggalMulai, $tanggalSelesai) {
+                          $q->where('tanggal_mulai', '<=', $tanggalMulai)
+                            ->where('tanggal_selesai', '>=', $tanggalSelesai);
+                      });
             })
-            ->first();
+            ->exists();
 
-        // Check advance bookings
-        $advanceBooking = $room->advanceBookings()
-            ->where('status', 'Active')
-            ->where(function($query) use ($startDate, $endDate) {
-                $query->whereBetween('tanggal_mulai', [$startDate, $endDate])
-                    ->orWhereBetween('tanggal_selesai', [$startDate, $endDate]);
-            })
-            ->first();
-
-        $isAvailable = !$existingBooking && !$advanceBooking;
+        $isAvailable = !$existingBooking;
 
         return response()->json([
             'available' => $isAvailable,
             'message' => $isAvailable 
-                ? 'Kamar tersedia untuk periode yang dipilih'
-                : 'Kamar tidak tersedia untuk periode yang dipilih'
+                ? 'Kamar tersedia untuk tanggal yang dipilih' 
+                : 'Kamar sudah terbooked untuk tanggal tersebut'
         ]);
     }
 }

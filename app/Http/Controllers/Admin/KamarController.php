@@ -170,10 +170,7 @@ class KamarController extends Controller
                 throw new \Exception('Tidak dapat menghapus kamar karena masih ada penghuni aktif.');
             }
 
-            // Check if room has any future bookings
-            if ($kamar->advanceBookings()->where('status', 'Active')->exists()) {
-                throw new \Exception('Tidak dapat menghapus kamar karena masih ada booking di masa depan.');
-            }
+            // Advance booking check removed as feature is disabled
 
             $kamar->delete();
             
@@ -203,9 +200,7 @@ class KamarController extends Controller
                 if ($room->bookings()->where('status_booking', 'Aktif')->exists()) {
                     throw new \Exception("Kamar {$room->no_kamar} masih memiliki penghuni aktif.");
                 }
-                if ($room->advanceBookings()->where('status', 'Active')->exists()) {
-                    throw new \Exception("Kamar {$room->no_kamar} masih memiliki booking di masa depan.");
-                }
+                // Advance booking check removed as feature is disabled
             }
 
             Kamar::whereIn('id_kamar', $request->ids)->delete();

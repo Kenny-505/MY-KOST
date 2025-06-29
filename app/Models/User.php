@@ -80,13 +80,7 @@ class User extends Authenticatable implements MustVerifyEmail
         );
     }
 
-    /**
-     * Get the advance booking records for the user.
-     */
-    public function advanceBookings(): HasMany
-    {
-        return $this->hasMany(AdvanceBooking::class, 'id_user');
-    }
+    // Advance booking feature removed
 
     /**
      * Check if user is admin

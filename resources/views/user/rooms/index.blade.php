@@ -59,7 +59,7 @@
                 
                 <div id="filterContent" class="space-y-6">
                     <!-- Filter Row 1 -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                             <!-- Room Type Filter -->
                             <div>
                             <label for="tipe" class="block text-sm font-medium text-gray-700 mb-2">
@@ -68,11 +68,11 @@
                                 </svg>
                                 Tipe Kamar
                             </label>
-                            <select id="tipe" name="tipe" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <select id="type" name="type" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                     <option value="">Semua Tipe</option>
-                                    @foreach($tipeKamar as $tipe)
-                                        <option value="{{ $tipe->tipe_kamar }}" {{ request('tipe') == $tipe->tipe_kamar ? 'selected' : '' }}>
-                                            {{ $tipe->tipe_kamar }}
+                                    @foreach($roomTypes as $tipe)
+                                        <option value="{{ $tipe }}" {{ request('type') == $tipe ? 'selected' : '' }}>
+                                            {{ $tipe }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -82,14 +82,32 @@
                             <div>
                             <label for="kapasitas" class="block text-sm font-medium text-gray-700 mb-2">
                                 <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 715.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                 </svg>
                                 Kapasitas
                             </label>
-                            <select id="kapasitas" name="kapasitas" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <select id="capacity" name="capacity" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                     <option value="">Semua Kapasitas</option>
-                                    <option value="1" {{ request('kapasitas') == '1' ? 'selected' : '' }}>1 Orang</option>
-                                    <option value="2" {{ request('kapasitas') == '2' ? 'selected' : '' }}>2 Orang</option>
+                                    @foreach($capacities as $capacity)
+                                        <option value="{{ $capacity }}" {{ request('capacity') == $capacity ? 'selected' : '' }}>
+                                            {{ $capacity }} Orang
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Status Filter -->
+                            <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Status
+                            </label>
+                            <select id="status" name="status" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Semua Status</option>
+                                    <option value="available" {{ request('status') == 'available' ? 'selected' : '' }}>Tersedia</option>
+                                    <option value="occupied" {{ request('status') == 'occupied' ? 'selected' : '' }}>Sedang Ditempati</option>
                                 </select>
                             </div>
 
@@ -101,10 +119,10 @@
                                 </svg>
                                 Urutkan
                             </label>
-                            <select id="sort_by" name="sort_by" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Terbaru</option>
-                                    <option value="price" {{ request('sort_by') == 'price' ? 'selected' : '' }}>Harga</option>
-                                <option value="no_kamar" {{ request('sort_by') == 'no_kamar' ? 'selected' : '' }}>No. Kamar</option>
+                            <select id="sort" name="sort" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="no_kamar" {{ request('sort') == 'no_kamar' ? 'selected' : '' }}>No. Kamar</option>
+                                    <option value="price" {{ request('sort') == 'price' ? 'selected' : '' }}>Harga</option>
+                                    <option value="type" {{ request('sort') == 'type' ? 'selected' : '' }}>Tipe Kamar</option>
                             </select>
                         </div>
 
@@ -116,9 +134,9 @@
                                 </svg>
                                 Arah
                             </label>
-                            <select id="sort_order" name="sort_order" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>A-Z / Rendah-Tinggi</option>
-                                <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Z-A / Tinggi-Rendah</option>
+                            <select id="direction" name="direction" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="asc" {{ request('direction') == 'asc' ? 'selected' : '' }}>A-Z / Rendah-Tinggi</option>
+                                <option value="desc" {{ request('direction') == 'desc' ? 'selected' : '' }}>Z-A / Tinggi-Rendah</option>
                                 </select>
                             </div>
                         </div>
@@ -153,7 +171,7 @@
                         </div>
                         @if($priceRange)
                         <div class="mt-2 text-sm text-gray-600">
-                            Range harga: Rp {{ number_format($priceRange->min_price, 0, ',', '.') }} - Rp {{ number_format($priceRange->max_price, 0, ',', '.') }}
+                            Range harga: Rp {{ number_format($priceRange->min, 0, ',', '.') }} - Rp {{ number_format($priceRange->max, 0, ',', '.') }}
                         </div>
                         @endif
                     </div>
@@ -176,7 +194,7 @@
                             Reset Filter
                         </a>
 
-                        @if(request()->hasAny(['search', 'tipe', 'kapasitas', 'min_price', 'max_price', 'sort_by', 'sort_order']))
+                        @if(request()->hasAny(['search', 'type', 'capacity', 'status', 'min_price', 'max_price', 'sort', 'direction']))
                         <div class="flex items-center">
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -192,29 +210,118 @@
         </div>
 
         <!-- Results Summary -->
-        <div class="flex items-center justify-between mb-6">
-            <div class="text-gray-600">
-                <span class="text-lg font-medium text-gray-900">{{ $rooms->total() }}</span> kamar ditemukan
-                @if(request('search'))
-                    untuk "<span class="font-medium text-blue-600">{{ request('search') }}</span>"
-                @endif
-            </div>
-            <div class="flex items-center space-x-2">
-                <span class="text-sm text-gray-600">View:</span>
-                <button onclick="setGridView('grid')" id="gridView" class="p-2 rounded-lg bg-blue-100 text-blue-600">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                    </svg>
-                </button>
-                <button onclick="setGridView('list')" id="listView" class="p-2 rounded-lg text-gray-400 hover:bg-gray-100">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 result-summary">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <!-- Results Info -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div class="flex items-center">
+                        <div class="bg-blue-50 rounded-lg p-3 mr-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0v-4"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                {{ $rooms->total() }} Kamar Ditemukan
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                @if(request('search'))
+                                    Hasil pencarian untuk "<span class="font-medium text-blue-600">{{ request('search') }}</span>"
+                                @elseif(request()->hasAny(['type', 'capacity', 'status', 'min_price', 'max_price']))
+                                    Dengan filter yang diterapkan
+                                @else
+                                    Menampilkan semua kamar tersedia
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Active Filters Indicator -->
+                    @if(request()->hasAny(['search', 'type', 'capacity', 'status', 'min_price', 'max_price', 'sort', 'direction']))
+                        <div class="flex flex-wrap gap-2">
+                            @if(request('type'))
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 filter-badge cursor-default">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"></path>
+                                    </svg>
+                                    Tipe: {{ request('type') }}
+                                </span>
+                            @endif
+                                                         @if(request('capacity'))
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 filter-badge cursor-default">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                                    </svg>
+                                    Kapasitas: {{ request('capacity') }} orang
+                                </span>
+                            @endif
+                                                         @if(request('status'))
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200 filter-badge cursor-default">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Status: {{ request('status') }}
+                                </span>
+                            @endif
+                                                         @if(request('min_price') || request('max_price'))
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 filter-badge cursor-default">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.51-1.31c-.562-.649-1.413-1.076-2.353-1.253V5z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Harga: 
+                                    @if(request('min_price') && request('max_price'))
+                                        Rp {{ number_format(request('min_price'), 0, ',', '.') }} - Rp {{ number_format(request('max_price'), 0, ',', '.') }}
+                                    @elseif(request('min_price'))
+                                        Min Rp {{ number_format(request('min_price'), 0, ',', '.') }}
+                                    @else
+                                        Max Rp {{ number_format(request('max_price'), 0, ',', '.') }}
+                                    @endif
+                                </span>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+
+                <!-- View Options -->
+                <div class="flex items-center justify-between sm:justify-end gap-4">
+                    <!-- Sorting Info -->
+                    @if(request('sort'))
+                        <div class="hidden sm:flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                            Urutkan: 
+                            @if(request('sort') === 'harga') Harga
+                            @elseif(request('sort') === 'no_kamar') No. Kamar
+                            @elseif(request('sort') === 'created_at') Terbaru
+                            @else {{ request('sort') }}
+                            @endif
+                            ({{ request('direction', 'asc') === 'asc' ? 'A-Z' : 'Z-A' }})
+                        </div>
+                    @endif
+
+                    <!-- View Toggle -->
+                    <div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+                        <span class="text-xs text-gray-600 px-2">Tampilan:</span>
+                        <button onclick="setGridView('grid')" id="gridView" 
+                                class="p-2 rounded-md bg-blue-500 text-white shadow-sm transition-all duration-200 view-toggle-btn">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="setGridView('list')" id="listView" 
+                                class="p-2 rounded-md text-gray-400 hover:bg-gray-200 transition-all duration-200 view-toggle-btn">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Room Cards Grid -->
+        <!-- Room Cards Grid -->
         @if($rooms->count() > 0)
             <div id="roomsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 @foreach($rooms as $room)
@@ -245,17 +352,28 @@
 
                             <!-- Status Badge -->
                             <div class="absolute top-4 left-4">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-                                    @if($room->status === 'Kosong') bg-green-100 text-green-800
-                                    @elseif($room->status === 'Dipesan') bg-yellow-100 text-yellow-800
-                                    @else bg-red-100 text-red-800 @endif">
-                                    @if($room->status === 'Kosong')
+                                @if($room->hasActiveBookings())
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                                         </svg>
-                                    @endif
-                                    {{ $room->status }}
-                                </span>
+                                        Sedang Ditempati
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                                        @if($room->status === 'Kosong') bg-green-100 text-green-800
+                                        @elseif($room->status === 'Dipesan') bg-yellow-100 text-yellow-800
+                                        @else bg-red-100 text-red-800 @endif">
+                                        @if($room->status === 'Kosong')
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            Tersedia
+                                        @else
+                                            {{ $room->status }}
+                                        @endif
+                                    </span>
+                                @endif
                             </div>
 
                             <!-- Room Type Badge -->
@@ -322,7 +440,7 @@
                                     Lihat Detail
                                 </a>
                                 
-                                @if($room->status === 'Kosong')
+                                @if($room->isAvailableForBooking())
                                     <a href="{{ route('user.booking.create', ['kamar_id' => $room->id_kamar]) }}" 
                                        class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-center py-2 px-4 rounded-lg transition duration-200 text-sm font-medium">
                                         Booking Sekarang
@@ -330,7 +448,11 @@
                                 @else
                                     <button disabled 
                                             class="flex-1 bg-gray-300 text-gray-500 text-center py-2 px-4 rounded-lg text-sm font-medium cursor-not-allowed">
-                                        Tidak Tersedia
+                                        @if($room->hasActiveBookings())
+                                            Sedang Ditempati
+                                        @else
+                                            Tidak Tersedia
+                                        @endif
                                     </button>
                                 @endif
                             </div>
@@ -339,9 +461,82 @@
                 @endforeach
             </div>
 
-            <!-- Pagination -->
-            <div class="flex items-center justify-center">
-                {{ $rooms->links() }}
+            <!-- Pagination Section -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <!-- Pagination Info -->
+                    <div class="flex items-center text-sm text-gray-600">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span class="font-medium">
+                                Menampilkan {{ $rooms->firstItem() ?? 0 }} - {{ $rooms->lastItem() ?? 0 }} 
+                                dari {{ $rooms->total() }} kamar
+                            </span>
+                        </div>
+                        @if($rooms->hasPages())
+                            <span class="hidden sm:inline-block mx-2 text-gray-300">|</span>
+                            <span class="hidden sm:inline-block">
+                                Halaman {{ $rooms->currentPage() }} dari {{ $rooms->lastPage() }}
+                            </span>
+                        @endif
+                    </div>
+
+                    <!-- Pagination Links -->
+                    @if($rooms->hasPages())
+                        <div class="flex items-center justify-center sm:justify-end">
+                            <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
+                                <!-- Previous Page Link -->
+                                @if ($rooms->onFirstPage())
+                                    <span class="relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 bg-gray-50 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span class="sr-only">Previous</span>
+                                    </span>
+                                @else
+                                    <a href="{{ $rooms->previousPageUrl() }}" class="relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors duration-200">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span class="sr-only">Previous</span>
+                                    </a>
+                                @endif
+
+                                <!-- Pagination Elements -->
+                                @foreach ($rooms->getUrlRange(1, $rooms->lastPage()) as $page => $url)
+                                    @if ($page == $rooms->currentPage())
+                                        <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-500 text-sm font-medium text-white cursor-default">
+                                            {{ $page }}
+                                        </span>
+                                    @else
+                                        <a href="{{ $url }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-300 transition-colors duration-200">
+                                            {{ $page }}
+                                        </a>
+                                    @endif
+                                @endforeach
+
+                                <!-- Next Page Link -->
+                                @if ($rooms->hasMorePages())
+                                    <a href="{{ $rooms->nextPageUrl() }}" class="relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors duration-200">
+                                        <span class="sr-only">Next</span>
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                @else
+                                    <span class="relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 bg-gray-50 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                        <span class="sr-only">Next</span>
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                @endif
+                            </nav>
+                        </div>
+                    @endif
+                </div>
             </div>
         @else
             <!-- Empty State -->
@@ -353,14 +548,14 @@
                 </div>
                 <h3 class="text-xl font-medium text-gray-900 mb-2">Tidak ada kamar yang ditemukan</h3>
                 <p class="text-gray-600 mb-6">
-                    @if(request()->hasAny(['search', 'tipe', 'kapasitas', 'min_price', 'max_price']))
+                    @if(request()->hasAny(['search', 'type', 'capacity', 'status', 'min_price', 'max_price']))
                         Coba ubah filter pencarian Anda atau hapus beberapa filter.
                     @else
                         Saat ini belum ada kamar yang tersedia.
                     @endif
                 </p>
                 
-                @if(request()->hasAny(['search', 'tipe', 'kapasitas', 'min_price', 'max_price']))
+                @if(request()->hasAny(['search', 'type', 'capacity', 'status', 'min_price', 'max_price']))
                     <a href="{{ route('user.rooms.index') }}" 
                        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,12 +592,12 @@ function setGridView(viewType) {
     
     if (viewType === 'grid') {
         container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8';
-        gridBtn.className = 'p-2 rounded-lg bg-blue-100 text-blue-600';
-        listBtn.className = 'p-2 rounded-lg text-gray-400 hover:bg-gray-100';
+        gridBtn.className = 'p-2 rounded-md bg-blue-500 text-white shadow-sm transition-all duration-200 view-toggle-btn';
+        listBtn.className = 'p-2 rounded-md text-gray-400 hover:bg-gray-200 transition-all duration-200 view-toggle-btn';
     } else {
         container.className = 'space-y-4 mb-8';
-        gridBtn.className = 'p-2 rounded-lg text-gray-400 hover:bg-gray-100';
-        listBtn.className = 'p-2 rounded-lg bg-blue-100 text-blue-600';
+        gridBtn.className = 'p-2 rounded-md text-gray-400 hover:bg-gray-200 transition-all duration-200 view-toggle-btn';
+        listBtn.className = 'p-2 rounded-md bg-blue-500 text-white shadow-sm transition-all duration-200 view-toggle-btn';
     }
 }
 
@@ -436,6 +631,60 @@ window.addEventListener('resize', function() {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* Custom pagination styles */
+.pagination-info {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Enhanced hover effects */
+.filter-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* View toggle animation */
+.view-toggle-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.view-toggle-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.view-toggle-btn:hover::before {
+    left: 100%;
+}
+
+/* Smooth transitions for result cards */
+.result-summary {
+    transition: all 0.3s ease;
+}
+
+.result-summary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive pagination */
+@media (max-width: 640px) {
+    .pagination-info {
+        text-align: center;
+    }
+    
+    .pagination-links {
+        justify-content: center;
+        margin-top: 1rem;
+    }
 }
 </style>
 @endsection 

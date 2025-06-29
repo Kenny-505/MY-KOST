@@ -106,6 +106,6 @@ class Booking extends Model
 
     public function getRouteKeyName()
     {
-    return 'id_tipe_kamar';
+        return 'id_booking';
     }
 }

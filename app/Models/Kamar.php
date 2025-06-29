@@ -38,6 +38,17 @@ class Kamar extends Model
     ];
 
     /**
+     * Get single photo URL
+     *
+     * @param string $field
+     * @return string|null
+     */
+    public function getPhotoUrl($field)
+    {
+        return $this->getImageUrlFromBase64($field);
+    }
+
+    /**
      * Get all photo URLs for the room
      *
      * @return array
@@ -101,14 +112,6 @@ class Kamar extends Model
     }
 
     /**
-     * Get the advance booking records for the kamar.
-     */
-    public function advanceBookings(): HasMany
-    {
-        return $this->hasMany(AdvanceBooking::class, 'id_kamar');
-    }
-
-    /**
      * Get the pembayaran records for the kamar.
      */
     public function pembayaran(): HasMany
@@ -146,6 +149,25 @@ class Kamar extends Model
     public function isOccupied(): bool
     {
         return $this->status === 'Terisi';
+    }
+
+    /**
+     * Check if kamar has active bookings (currently occupied by tenants)
+     */
+    public function hasActiveBookings(): bool
+    {
+        return $this->bookings()
+            ->where('status_booking', 'Aktif')
+            ->where('tanggal_selesai', '>=', now())
+            ->exists();
+    }
+
+    /**
+     * Check if kamar is available for new booking
+     */
+    public function isAvailableForBooking(): bool
+    {
+        return $this->status === 'Kosong' && !$this->hasActiveBookings();
     }
 
     public function getRouteKeyName()

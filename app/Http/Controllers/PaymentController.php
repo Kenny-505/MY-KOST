@@ -24,20 +24,38 @@ class PaymentController extends Controller
     /**
      * Show payment form
      *
-     * @param Pembayaran $pembayaran
+     * @param Booking $booking
      * @return \Illuminate\Http\Response
      */
-    public function showPaymentForm(Pembayaran $pembayaran)
+    public function showPaymentForm(Booking $booking)
     {
-        // Validate user owns this payment
-        if ($pembayaran->id_user !== auth()->id()) {
-            abort(403, 'Unauthorized access to payment.');
+        // Validate user is involved in this booking
+        if ($booking->penghuni->id_user !== auth()->id()) {
+            abort(403, 'Unauthorized access to booking.');
         }
 
         // Load related data
-        $pembayaran->load(['booking.kamar.tipeKamar', 'booking.paketKamar', 'booking.penghuni.user']);
+        $booking->load(['kamar.tipeKamar', 'paketKamar', 'penghuni.user']);
 
-        return view('payment.form', compact('pembayaran'));
+        // Get or create payment record for this booking
+        $payment = Pembayaran::where('id_booking', $booking->id_booking)
+                             ->where('payment_type', 'Booking')
+                             ->first();
+
+        if (!$payment) {
+            // Create new payment record
+            $payment = new Pembayaran();
+            $payment->id_user = auth()->id();
+            $payment->id_booking = $booking->id_booking;
+            $payment->id_kamar = $booking->id_kamar;
+            $payment->tanggal_pembayaran = now();
+            $payment->status_pembayaran = 'Belum bayar';
+            $payment->jumlah_pembayaran = $booking->paketKamar->harga;
+            $payment->payment_type = 'Booking';
+            $payment->save();
+        }
+
+        return view('payment.form', compact('booking', 'payment'));
     }
 
     /**

@@ -149,7 +149,7 @@
                                 @endif
 
                                 <!-- Action Button -->
-                                <a href="{{ route('user.rooms.index', ['type' => $type->id_tipe_kamar]) }}" 
+                                <a href="{{ route('user.rooms.index', ['type' => $type->tipe_kamar]) }}" 
                                    class="block w-full text-center py-3 px-4 bg-gradient-to-r @if($type->tipe_kamar === 'Standar') from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 @elseif($type->tipe_kamar === 'Elite') from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 @else from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 @endif text-white font-semibold rounded-xl transition duration-300 transform group-hover:scale-105">
                                     Lihat Kamar {{ $type->tipe_kamar }}
                                 </a>

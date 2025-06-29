@@ -88,6 +88,7 @@ Route::middleware(['auth', 'verified', 'user'])->prefix('user')->name('user.')->
     // Booking Process
     Route::get('/booking/create', [UserBookingController::class, 'create'])->name('booking.create');
     Route::post('/booking', [UserBookingController::class, 'store'])->name('booking.store');
+    Route::post('/booking/validate-email', [UserBookingController::class, 'validateEmail'])->name('booking.validateEmail');
     
     // Payment Routes (will be implemented in Phase 5)
     Route::get('/payment/create/{pembayaran}', [UserBookingController::class, 'createPayment'])->name('payment.create');
@@ -127,7 +128,7 @@ Route::middleware('auth')->group(function () {
 
 // Payment Routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/payment/form/{pembayaran}', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
+    Route::get('/payment/form/{booking}', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
     Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
     Route::post('/payment/callback', [PaymentController::class, 'handleCallback'])->name('payment.callback');
     Route::get('/payment/success/{orderId}', [PaymentController::class, 'paymentSuccess'])->name('payment.success');

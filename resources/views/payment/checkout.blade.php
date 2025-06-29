@@ -133,10 +133,12 @@
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-gray-600">Status Booking</span>
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
-                                    @if($booking->status_booking == 'Pending')
-                                        bg-yellow-100 text-yellow-800
-                                    @elseif($booking->status_booking == 'Confirmed')
+                                    @if($booking->status_booking == 'Aktif')
                                         bg-green-100 text-green-800
+                                    @elseif($booking->status_booking == 'Selesai')
+                                        bg-blue-100 text-blue-800
+                                    @elseif($booking->status_booking == 'Dibatalkan')
+                                        bg-red-100 text-red-800
                                     @else
                                         bg-gray-100 text-gray-800
                                     @endif">
@@ -149,7 +151,7 @@
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-gray-600">Tanggal Booking</span>
-                                <span class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($booking->tanggal_booking)->format('d M Y H:i') }}</span>
+                                <span class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($booking->created_at)->format('d M Y H:i') }}</span>
                             </div>
                         </div>
                     </div>
