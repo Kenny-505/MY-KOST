@@ -226,7 +226,15 @@
                                         @if($item->status == 'Kosong') bg-green-100 text-green-800
                                         @elseif($item->status == 'Dipesan') bg-yellow-100 text-yellow-800
                                         @else bg-red-100 text-red-800 @endif">
+                                        @if($item->status === 'Kosong')
+                                            Tersedia
+                                        @elseif($item->status === 'Dipesan')
+                                            Dipesan
+                                        @elseif($item->status === 'Terisi')
+                                            Sedang Ditempati
+                                        @else
                                         {{ $item->status }}
+                                        @endif
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">

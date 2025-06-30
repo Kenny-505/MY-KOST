@@ -37,9 +37,9 @@ class PaymentController extends Controller
         // Load related data
         $booking->load(['kamar.tipeKamar', 'paketKamar', 'penghuni.user']);
 
-        // Get or create payment record for this booking
+        // Get or create payment record for this booking (latest payment)
         $payment = Pembayaran::where('id_booking', $booking->id_booking)
-                             ->where('payment_type', 'Booking')
+                             ->orderBy('id_pembayaran', 'desc')
                              ->first();
 
         if (!$payment) {

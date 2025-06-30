@@ -71,30 +71,27 @@
                     
                     <div class="flex justify-between items-center">
                         <span class="text-gray-600">Status</span>
-                        @if($room->hasActiveBookings())
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            @if($room->status === 'Kosong') bg-green-100 text-green-800
+                            @elseif($room->status === 'Dipesan') bg-yellow-100 text-yellow-800
+                            @elseif($room->status === 'Terisi') bg-red-100 text-red-800
+                            @else bg-gray-100 text-gray-800 @endif">
+                            @if($room->status === 'Kosong')
+                                Tersedia
+                            @elseif($room->status === 'Dipesan')
+                                Dipesan
+                            @elseif($room->status === 'Terisi')
                                 Sedang Ditempati
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($room->status === 'Kosong') bg-green-100 text-green-800
-                                @elseif($room->status === 'Dipesan') bg-yellow-100 text-yellow-800
-                                @else bg-red-100 text-red-800 @endif">
-                                @if($room->status === 'Kosong')
-                                    Tersedia
-                                @else
-                                    {{ $room->status }}
-                                @endif
-                            </span>
-                        @endif
+                            @else
+                                {{ $room->status }}
+                            @endif
+                        </span>
                     </div>
 
-                    @if($paketKamar->isNotEmpty())
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Kapasitas</span>
-                        <span class="font-medium text-gray-900">{{ $paketKamar->max('kapasitas_kamar') }} Orang</span>
+                        <span class="text-gray-600">Kapasitas Maksimal</span>
+                        <span class="font-medium text-gray-900">{{ $room->kapasitas_max }} Orang</span>
                     </div>
-                    @endif
                 </div>
 
                 <!-- Facilities -->
@@ -129,15 +126,19 @@
                             <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
-                            @if($room->hasActiveBookings())
+                            @if($room->status === 'Terisi')
                                 Sedang Ditempati
+                            @elseif($room->status === 'Dipesan')
+                                Dipesan
                             @else
                                 Kamar Tidak Tersedia
                             @endif
                         </button>
                         <p class="text-xs text-gray-500 text-center mt-2">
-                            @if($room->hasActiveBookings())
+                            @if($room->status === 'Terisi')
                                 Kamar sedang ditempati oleh penghuni lain
+                            @elseif($room->status === 'Dipesan')
+                                Kamar sudah dipesan dan menunggu konfirmasi
                             @else
                                 Status kamar: {{ $room->status }}
                             @endif
@@ -208,22 +209,19 @@
                         <p class="mt-1 text-sm text-gray-500">Tidak ada paket kamar untuk tipe {{ $room->tipeKamar->tipe_kamar }}</p>
                     </div>
                 @else
-                    <div class="space-y-4">
+                    <div class="mt-4 space-y-4">
                         @foreach($paketKamar as $paket)
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h4 class="text-lg font-medium text-gray-900">{{ $paket->jenis_paket }}</h4>
-                                        <p class="text-sm text-gray-600">
-                                            Kapasitas {{ $paket->kapasitas_kamar }} orang • {{ $paket->jumlah_penghuni }} penghuni
-                                        </p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-2xl font-bold text-orange-600">Rp {{ number_format($paket->harga, 0, ',', '.') }}</p>
-                                        <p class="text-sm text-gray-500">per {{ strtolower($paket->jenis_paket) }}</p>
-                                    </div>
+                            @if($room->kapasitas_max >= $paket->kapasitas_kamar)
+                            <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">{{ $paket->jenis_paket }}</h4>
+                                    <p class="text-sm text-gray-500">Kapasitas {{ $paket->kapasitas_kamar }} Orang</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-orange-600">Rp {{ number_format($paket->harga, 0, ',', '.') }}</p>
                                 </div>
                             </div>
+                            @endif
                         @endforeach
                     </div>
                 @endif
@@ -246,23 +244,30 @@
                                 <span class="font-medium text-gray-900 ml-1">{{ $room->tipeKamar->tipe_kamar }}</span>
                             </div>
                                                         <div class="flex items-center text-sm">
-                                @if($room->hasActiveBookings())
+                                @if($room->status === 'Kosong')
+                                    <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-gray-600">Status: </span>
+                                    <span class="font-medium ml-1 text-green-600">Tersedia</span>
+                                @elseif($room->status === 'Dipesan')
+                                    <svg class="w-4 h-4 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-gray-600">Status: </span>
+                                    <span class="font-medium ml-1 text-yellow-600">Dipesan</span>
+                                @elseif($room->status === 'Terisi')
                                     <svg class="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                     </svg>
                                     <span class="text-gray-600">Status: </span>
                                     <span class="font-medium ml-1 text-red-600">Sedang Ditempati</span>
                                 @else
-                                    <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    <svg class="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                     <span class="text-gray-600">Status: </span>
-                                    <span class="font-medium ml-1
-                                        @if($room->status === 'Kosong') text-green-600
-                                        @elseif($room->status === 'Dipesan') text-yellow-600
-                                        @else text-red-600 @endif">
-                                        @if($room->status === 'Kosong') Tersedia @else {{ $room->status }} @endif
-                                    </span>
+                                    <span class="font-medium ml-1 text-gray-600">{{ $room->status }}</span>
                                 @endif
                             </div>
                         </div>
@@ -297,7 +302,41 @@
             <div class="bg-white rounded-xl shadow-sm p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Status Kamar</h3>
                 
-                @if($room->hasActiveBookings())
+                @if($room->status === 'Kosong')
+                    <!-- Available Status -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-medium text-green-800">Kamar Tersedia</h4>
+                                <p class="text-sm text-green-700 mt-1">
+                                    Kamar ini tersedia untuk booking dan siap ditempati.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @elseif($room->status === 'Dipesan')
+                    <!-- Booked Status -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-medium text-yellow-800">Kamar Dipesan</h4>
+                                <p class="text-sm text-yellow-700 mt-1">
+                                    Kamar ini sudah dipesan dan menunggu konfirmasi pembayaran.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @elseif($room->status === 'Terisi')
                     <!-- Occupied Status -->
                     <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                         <div class="flex items-center">
@@ -315,18 +354,18 @@
                         </div>
                     </div>
                 @else
-                    <!-- Available Status -->
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <!-- Unknown Status -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
                             <div class="ml-3">
-                                <h4 class="text-sm font-medium text-green-800">Kamar Tersedia</h4>
-                                <p class="text-sm text-green-700 mt-1">
-                                    Kamar ini tersedia untuk booking dan siap ditempati.
+                                <h4 class="text-sm font-medium text-gray-800">Status: {{ $room->status }}</h4>
+                                <p class="text-sm text-gray-700 mt-1">
+                                    Status kamar tidak diketahui. Silakan hubungi admin untuk informasi lebih lanjut.
                                 </p>
                             </div>
                         </div>
@@ -342,12 +381,12 @@
                             <span class="text-gray-700">Tersedia - Kamar kosong dan siap untuk booking</span>
                         </div>
                         <div class="flex items-center text-sm">
-                            <div class="w-3 h-3 bg-red-500 rounded mr-3"></div>
-                            <span class="text-gray-700">Sedang Ditempati - Kamar dihuni oleh penghuni aktif</span>
+                            <div class="w-3 h-3 bg-yellow-500 rounded mr-3"></div>
+                            <span class="text-gray-700">Dipesan - Kamar sudah dipesan, menunggu konfirmasi</span>
                         </div>
                         <div class="flex items-center text-sm">
-                            <div class="w-3 h-3 bg-yellow-500 rounded mr-3"></div>
-                            <span class="text-gray-700">Dalam Proses - Booking sedang diproses</span>
+                            <div class="w-3 h-3 bg-red-500 rounded mr-3"></div>
+                            <span class="text-gray-700">Sedang Ditempati - Kamar dihuni oleh penghuni aktif</span>
                         </div>
                     </div>
                 </div>

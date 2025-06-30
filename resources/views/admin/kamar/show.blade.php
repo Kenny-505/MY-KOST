@@ -18,7 +18,15 @@
                         <span class="px-3 py-1 rounded-full text-sm font-medium
                             {{ $kamar->status === 'Kosong' ? 'bg-green-100 text-green-800' : 
                                ($kamar->status === 'Dipesan' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                            @if($kamar->status === 'Kosong')
+                                Tersedia
+                            @elseif($kamar->status === 'Dipesan')
+                                Dipesan
+                            @elseif($kamar->status === 'Terisi')
+                                Sedang Ditempati
+                            @else
                             {{ $kamar->status }}
+                            @endif
                         </span>
                         <span class="text-sm text-gray-500">
                             Tipe: <span class="font-medium text-gray-900">{{ $kamar->tipeKamar->tipe_kamar }}</span>
@@ -118,7 +126,15 @@
                             <span class="px-2 py-1 rounded-full text-xs font-medium
                                 {{ $kamar->status === 'Kosong' ? 'bg-green-100 text-green-800' : 
                                    ($kamar->status === 'Dipesan' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                @if($kamar->status === 'Kosong')
+                                    Tersedia
+                                @elseif($kamar->status === 'Dipesan')
+                                    Dipesan
+                                @elseif($kamar->status === 'Terisi')
+                                    Sedang Ditempati
+                                @else
                                 {{ $kamar->status }}
+                                @endif
                             </span>
                         </div>
                         <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">

@@ -213,10 +213,18 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Status Kamar</label>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                        @if($pengaduan->kamar->status === 'Kosong') bg-gray-100 text-gray-800
+                                        @if($pengaduan->kamar->status === 'Kosong') bg-green-100 text-green-800
                                         @elseif($pengaduan->kamar->status === 'Dipesan') bg-yellow-100 text-yellow-800
                                         @else bg-red-100 text-red-800 @endif">
+                                        @if($pengaduan->kamar->status === 'Kosong')
+                                            Tersedia
+                                        @elseif($pengaduan->kamar->status === 'Dipesan')
+                                            Dipesan
+                                        @elseif($pengaduan->kamar->status === 'Terisi')
+                                            Sedang Ditempati
+                                        @else
                                         {{ $pengaduan->kamar->status }}
+                                        @endif
                                     </span>
                                 </div>
                                 <div>

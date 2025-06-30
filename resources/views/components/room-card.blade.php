@@ -20,7 +20,15 @@ $imageUrl = $imageData ? 'data:image/jpeg;base64,' . base64_encode($imageData) :
         <img src="{{ $imageUrl }}" alt="Kamar {{ $room->no_kamar }}" class="w-full h-full object-cover">
         <div class="absolute top-4 right-4">
             <span class="px-3 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
+                @if($room->status === 'Kosong')
+                    Tersedia
+                @elseif($room->status === 'Dipesan')
+                    Dipesan
+                @elseif($room->status === 'Terisi')
+                    Sedang Ditempati
+                @else
                 {{ $room->status }}
+                @endif
             </span>
         </div>
         <div class="absolute top-4 left-4">
@@ -80,16 +88,28 @@ $imageUrl = $imageData ? 'data:image/jpeg;base64,' . base64_encode($imageData) :
                 Lihat Detail
             </a>
             
-            @if($showBookButton && $room->status === 'Kosong')
+            @if($showBookButton)
+                @if($room->status === 'Kosong')
                 <a href="{{ route('user.booking.create', ['kamar_id' => $room->id_kamar]) }}" 
                    class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-center py-2 px-4 rounded-lg transition-colors duration-200 text-sm font-medium">
-                    Booking
+                        Booking Sekarang
                 </a>
-            @elseif($room->status !== 'Kosong')
+                @elseif($room->status === 'Dipesan')
+                    <button disabled 
+                            class="flex-1 bg-gray-300 text-gray-500 text-center py-2 px-4 rounded-lg text-sm font-medium cursor-not-allowed">
+                        Sudah Dipesan
+                    </button>
+                @elseif($room->status === 'Terisi')
+                    <button disabled 
+                            class="flex-1 bg-gray-300 text-gray-500 text-center py-2 px-4 rounded-lg text-sm font-medium cursor-not-allowed">
+                        Sedang Ditempati
+                    </button>
+                @else
                 <button disabled 
                         class="flex-1 bg-gray-300 text-gray-500 text-center py-2 px-4 rounded-lg text-sm font-medium cursor-not-allowed">
                     Tidak Tersedia
                 </button>
+                @endif
             @endif
         </div>
     </div>

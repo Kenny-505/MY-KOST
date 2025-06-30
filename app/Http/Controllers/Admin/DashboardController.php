@@ -73,6 +73,26 @@ class DashboardController extends Controller
             ? ($resolvedComplaints / $totalComplaints) * 100 
             : 0;
 
+        // Revenue bulan ini
+        $currentMonth = now()->format('Y-m');
+        $currentMonthRevenue = Cache::remember("revenue_current_month_{$currentMonth}", 300, function() use ($currentMonth) {
+            return Pembayaran::where('status_pembayaran', 'Lunas')
+                ->whereRaw('DATE_FORMAT(tanggal_pembayaran, "%Y-%m") = ?', [$currentMonth])
+                ->sum('jumlah_pembayaran');
+        });
+
+        // Get revenue change percentage
+        $lastMonth = now()->subMonth()->format('Y-m');
+        $lastMonthRevenue = Cache::remember("revenue_last_month_{$lastMonth}", 300, function() use ($lastMonth) {
+            return Pembayaran::where('status_pembayaran', 'Lunas')
+                ->whereRaw('DATE_FORMAT(tanggal_pembayaran, "%Y-%m") = ?', [$lastMonth])
+                ->sum('jumlah_pembayaran');
+        });
+
+        $revenueChange = $lastMonthRevenue > 0 
+            ? (($currentMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100 
+            : 0;
+
         return [
             'total_kamar' => [
                 'value' => $totalKamar,
@@ -108,7 +128,7 @@ class DashboardController extends Controller
                 'subtitle' => sprintf('%.1f%% Resolution Rate', $complaintResolutionRate)
             ],
             'revenue_bulan_ini' => [
-                'value' => 'Rp ' . number_format($currentMonthRevenue, 0, ',', '.'),
+                'value' => 'Rp ' . number_format($currentMonthRevenue, 3, ',', '.'),
                 'label' => 'Revenue Bulan Ini',
                 'icon' => 'currency-dollar',
                 'color' => 'green',

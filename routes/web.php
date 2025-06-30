@@ -88,7 +88,7 @@ Route::middleware(['auth', 'verified', 'user'])->prefix('user')->name('user.')->
     // Booking Process
     Route::get('/booking/create', [UserBookingController::class, 'create'])->name('booking.create');
     Route::post('/booking', [UserBookingController::class, 'store'])->name('booking.store');
-    Route::post('/booking/validate-email', [UserBookingController::class, 'validateEmail'])->name('booking.validateEmail');
+    Route::post('/validate-friend-email', [UserBookingController::class, 'validateFriendEmail'])->name('booking.validateFriendEmail');
     
     // Payment Routes (will be implemented in Phase 5)
     Route::get('/payment/create/{pembayaran}', [UserBookingController::class, 'createPayment'])->name('payment.create');

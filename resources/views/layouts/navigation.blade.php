@@ -27,6 +27,17 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('user.rooms.index')" :active="request()->routeIs('user.rooms.index')">
+                        Cari Kamar
+                    </x-nav-link>
+                    @if(Auth::user()->hasActivePenghuni())
+                    <x-nav-link :href="route('penghuni.history.index')" :active="request()->routeIs('penghuni.history.*')">
+                        Riwayat Booking
+                    </x-nav-link>
+                    <x-nav-link :href="route('penghuni.pengaduan.index')" :active="request()->routeIs('penghuni.pengaduan.*')">
+                        Pengaduan Saya
+                    </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -82,6 +93,17 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('user.rooms.index')" :active="request()->routeIs('user.rooms.index')">
+                Cari Kamar
+            </x-responsive-nav-link>
+            @if(Auth::user()->hasActivePenghuni())
+            <x-responsive-nav-link :href="route('penghuni.history.index')" :active="request()->routeIs('penghuni.history.*')">
+                Riwayat Booking
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('penghuni.pengaduan.index')" :active="request()->routeIs('penghuni.pengaduan.*')">
+                Pengaduan Saya
+            </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

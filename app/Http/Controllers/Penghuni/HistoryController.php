@@ -7,8 +7,11 @@ use App\Models\Booking;
 use App\Models\Pembayaran;
 use App\Models\User;
 use App\Models\Penghuni;
+use App\Models\PaketKamar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class HistoryController extends Controller
 {
@@ -58,7 +61,7 @@ class HistoryController extends Controller
         return view('penghuni.history.payments', compact('payments'));
     }
 
-    // Extension Methods - To be implemented in Phase 7
+    // Extension Methods
     public function createExtension(Booking $booking)
     {
         $user = Auth::user();
@@ -70,24 +73,123 @@ class HistoryController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        // Check if booking is active and near expiry
+        // Check if booking is active
         if ($booking->status_booking !== 'Aktif') {
             return redirect()->back()->with('error', 'Booking tidak aktif.');
         }
 
-        // TODO: Implement extension form with package selection
-        // This will be implemented in Phase 7
-        
-        return view('penghuni.extension.create', compact('booking'));
+        // Get available packages for the same room type
+        $availablePackages = PaketKamar::where('id_tipe_kamar', $booking->kamar->id_tipe_kamar)
+            ->orderBy('jenis_paket')
+            ->orderBy('jumlah_penghuni')
+            ->get();
+
+        // Calculate remaining days until current booking expires
+        $currentEndDate = Carbon::parse($booking->tanggal_selesai);
+        $today = Carbon::now();
+        $remainingDays = $today->diffInDays($currentEndDate, false);
+
+        return view('penghuni.extension.create', compact('booking', 'availablePackages', 'remainingDays'));
     }
 
     public function storeExtension(Request $request, Booking $booking)
     {
-        // TODO: Implement extension processing
-        // Calculate new dates, create payment record, etc.
-        // This will be implemented in Phase 7
-        
-        return redirect()->route('penghuni.history.index')->with('info', 'Extension fitur akan diimplementasikan di Phase 7');
+        $user = Auth::user();
+        $penghuni = $user->activePenghuni();
+
+        // Validate access
+        if ($booking->id_penghuni !== $penghuni->id_penghuni && 
+            $booking->id_teman !== $penghuni->id_penghuni) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        // Validate form input
+        $request->validate([
+            'id_paket_kamar' => 'required|exists:paket_kamar,id_paket_kamar',
+            'tanggal_mulai_extension' => 'required|date|after_or_equal:' . $booking->tanggal_selesai,
+            'tanggal_selesai_extension' => 'required|date|after:tanggal_mulai_extension',
+        ], [
+            'tanggal_mulai_extension.after_or_equal' => 'Tanggal mulai perpanjangan harus setelah atau sama dengan tanggal selesai booking saat ini.',
+            'tanggal_selesai_extension.after' => 'Tanggal selesai perpanjangan harus setelah tanggal mulai.',
+        ]);
+
+        $extensionPackage = PaketKamar::findOrFail($request->id_paket_kamar);
+
+        // Validate package compatibility
+        if ($extensionPackage->id_tipe_kamar !== $booking->kamar->id_tipe_kamar) {
+            return redirect()->back()->withErrors(['error' => 'Paket tidak sesuai dengan tipe kamar.']);
+        }
+
+        // Validate occupancy
+        $currentOccupancy = $booking->id_teman ? 2 : 1;
+        if ($extensionPackage->jumlah_penghuni != $currentOccupancy) {
+            return redirect()->back()->withErrors(['error' => 'Jumlah penghuni paket tidak sesuai dengan booking saat ini.']);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Calculate extension duration
+            $startDate = Carbon::parse($request->tanggal_mulai_extension);
+            $endDate = Carbon::parse($request->tanggal_selesai_extension);
+            $totalDurasi = '';
+
+            switch($extensionPackage->jenis_paket) {
+                case 'Mingguan':
+                    $days = $startDate->diffInDays($endDate);
+                    $weeks = round($days / 7, 3);
+                    $totalDurasi = $weeks . ' minggu';
+                    break;
+                case 'Bulanan':
+                    $months = $startDate->diffInMonths($endDate);
+                    if ($months == 0 && $startDate->diffInDays($endDate) > 0) {
+                        $months = round($startDate->diffInDays($endDate) / 30, 3);
+                    }
+                    $totalDurasi = $months . ' bulan';
+                    break;
+                case 'Tahunan':
+                    $years = $startDate->diffInYears($endDate);
+                    if ($years == 0 && $startDate->diffInMonths($endDate) > 0) {
+                        $years = round($startDate->diffInDays($endDate) / 365, 3);
+                    }
+                    $totalDurasi = $years . ' tahun';
+                    break;
+            }
+
+            // Create new booking for extension
+            $extensionBooking = Booking::create([
+                'id_penghuni' => $booking->id_penghuni,
+                'id_teman' => $booking->id_teman,
+                'id_kamar' => $booking->id_kamar,
+                'id_paket_kamar' => $request->id_paket_kamar,
+                'tanggal_mulai' => $request->tanggal_mulai_extension,
+                'tanggal_selesai' => $request->tanggal_selesai_extension,
+                'total_durasi' => $totalDurasi,
+                'status_booking' => 'Aktif'
+            ]);
+
+            // Create payment record for extension
+            $payment = Pembayaran::create([
+                'id_user' => $user->id,
+                'id_booking' => $extensionBooking->id_booking,
+                'id_kamar' => $booking->id_kamar,
+                'tanggal_pembayaran' => now(),
+                'status_pembayaran' => 'Belum bayar',
+                'jumlah_pembayaran' => $extensionPackage->harga,
+                'payment_type' => 'Extension',
+            ]);
+
+            DB::commit();
+
+            // Redirect to payment
+            return redirect()->route('payment.form', ['booking' => $extensionBooking->id_booking])
+                ->with('success', 'Perpanjangan booking berhasil dibuat. Silakan lakukan pembayaran.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
     }
 
     // Add Penghuni Methods - To be implemented in Phase 7
@@ -101,24 +203,162 @@ class HistoryController extends Controller
             abort(403, 'Hanya penghuni utama yang dapat menambah penghuni.');
         }
 
+        // Check if booking is active
+        if ($booking->status_booking !== 'Aktif') {
+            return redirect()->back()->with('error', 'Hanya booking aktif yang dapat ditambahkan penghuni.');
+        }
+
         // Check if room has capacity for 2 and currently only 1
         if ($booking->id_teman !== null) {
             return redirect()->back()->with('error', 'Kamar sudah terisi 2 penghuni.');
         }
 
-        // TODO: Implement add penghuni form
-        // This will be implemented in Phase 7
+        // Get current package details
+        $currentPackage = $booking->paketKamar;
         
-        return view('penghuni.add-penghuni.form', compact('booking'));
+        // Check if room type supports 2 people
+        $doublePackages = PaketKamar::where('id_tipe_kamar', $currentPackage->id_tipe_kamar)
+            ->where('jenis_paket', $currentPackage->jenis_paket)
+            ->where('kapasitas_kamar', $currentPackage->kapasitas_kamar)
+            ->where('jumlah_penghuni', 2)
+            ->get();
+
+        if ($doublePackages->isEmpty()) {
+            return redirect()->back()->with('error', 'Tipe kamar ini tidak mendukung 2 penghuni.');
+        }
+
+        // Load relationship data
+        $booking->load(['kamar.tipeKamar', 'paketKamar']);
+
+        return view('penghuni.add-penghuni.create', compact('booking', 'doublePackages'));
     }
 
     public function addPenghuni(Request $request, Booking $booking)
     {
-        // TODO: Implement add penghuni processing
-        // Validate friend user, calculate additional payment, etc.
-        // This will be implemented in Phase 7
+        $user = Auth::user();
+        $penghuni = $user->activePenghuni();
+
+        // Validate access (only primary tenant can add)
+        if ($booking->id_penghuni !== $penghuni->id_penghuni) {
+            abort(403, 'Hanya penghuni utama yang dapat menambah penghuni.');
+        }
+
+        // Validate form input
+        $request->validate([
+            'friend_email' => 'required|email|exists:users,email',
+            'id_paket_kamar_double' => 'required|exists:paket_kamar,id_paket_kamar',
+            'agree_terms' => 'required|accepted',
+        ], [
+            'friend_email.required' => 'Email teman harus diisi.',
+            'friend_email.email' => 'Format email tidak valid.',
+            'friend_email.exists' => 'Email teman tidak ditemukan dalam sistem.',
+            'id_paket_kamar_double.required' => 'Paket 2 penghuni harus dipilih.',
+            'id_paket_kamar_double.exists' => 'Paket yang dipilih tidak valid.',
+            'agree_terms.accepted' => 'Anda harus menyetujui syarat dan ketentuan.',
+        ]);
+
+        // Get friend user and penghuni
+        $friendUser = User::where('email', $request->friend_email)->first();
+        $friendPenghuni = $friendUser->activePenghuni();
+
+        if (!$friendPenghuni) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['friend_email' => 'Teman belum terdaftar sebagai penghuni atau status tidak aktif.']);
+        }
+
+        // Check if friend is already in another active booking
+        $friendActiveBooking = Booking::where(function($query) use ($friendPenghuni) {
+                $query->where('id_penghuni', $friendPenghuni->id_penghuni)
+                      ->orWhere('id_teman', $friendPenghuni->id_penghuni);
+            })
+            ->where('status_booking', 'Aktif')
+            ->where('tanggal_selesai', '>=', now())
+            ->exists();
+
+        if ($friendActiveBooking) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['friend_email' => 'Teman sedang memiliki booking aktif di kamar lain.']);
+        }
+
+        // Get selected double package
+        $doublePackage = PaketKamar::findOrFail($request->id_paket_kamar_double);
+        $currentPackage = $booking->paketKamar;
+
+        // Validate package compatibility
+        if ($doublePackage->id_tipe_kamar !== $currentPackage->id_tipe_kamar ||
+            $doublePackage->jenis_paket !== $currentPackage->jenis_paket ||
+            $doublePackage->kapasitas_kamar !== $currentPackage->kapasitas_kamar ||
+            $doublePackage->jumlah_penghuni != 2) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['id_paket_kamar_double' => 'Paket yang dipilih tidak kompatibel dengan booking saat ini.']);
+        }
+
+        // Calculate remaining duration and additional cost
+        $now = Carbon::now();
+        $bookingStart = Carbon::parse($booking->tanggal_mulai);
+        $bookingEnd = Carbon::parse($booking->tanggal_selesai);
         
-        return redirect()->route('penghuni.history.index')->with('info', 'Add penghuni fitur akan diimplementasikan di Phase 7');
+        if ($bookingEnd <= $now) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Booking sudah berakhir atau akan berakhir hari ini.']);
+        }
+
+        // Calculate remaining days and additional payment (FAIR FORMULA)
+        // Start counting from the later of: now OR booking start date
+        $effectiveStart = $now->max($bookingStart);
+        $remainingDays = $effectiveStart->diffInDays($bookingEnd);
+        $totalBookingDays = $bookingStart->diffInDays($bookingEnd);
+        
+        // Prevent division by zero
+        if ($totalBookingDays == 0) {
+            $totalBookingDays = 1;
+        }
+        
+        $priceDifference = $doublePackage->harga - $currentPackage->harga;
+        $additionalPayment = ($priceDifference * $remainingDays) / $totalBookingDays;
+        $additionalPayment = round($additionalPayment, 3); // Round to 3 decimal places
+
+        DB::beginTransaction();
+
+        try {
+            // Update booking with friend
+            $booking->update([
+                'id_teman' => $friendPenghuni->id_penghuni,
+                'id_paket_kamar' => $doublePackage->id_paket_kamar,
+            ]);
+
+            // Create additional payment record
+            $payment = Pembayaran::create([
+                'id_user' => $user->id,
+                'id_booking' => $booking->id_booking,
+                'id_kamar' => $booking->id_kamar,
+                'tanggal_pembayaran' => now(),
+                'status_pembayaran' => 'Belum bayar',
+                'jumlah_pembayaran' => $additionalPayment,
+                'payment_type' => 'Additional',
+            ]);
+
+            DB::commit();
+
+            // Redirect to payment if there's additional cost
+            if ($additionalPayment > 0) {
+                return redirect()->route('payment.form', ['booking' => $booking->id_booking])
+                    ->with('success', 'Teman berhasil ditambahkan. Silakan lakukan pembayaran tambahan sebesar Rp ' . number_format($additionalPayment, 3, ',', '.'));
+            } else {
+                return redirect()->route('penghuni.history.show', $booking)
+                    ->with('success', 'Teman berhasil ditambahkan tanpa biaya tambahan.');
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
     }
 
     // Checkout Methods - To be implemented in Phase 7

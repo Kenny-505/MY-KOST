@@ -19,9 +19,24 @@ class RoomController extends Controller
     {
         $query = Kamar::with(['tipeKamar']); // Show all rooms with their status
 
-        // Search by room number
+        // Enhanced search functionality
         if ($request->filled('search')) {
-            $query->where('no_kamar', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                // Search in room number
+                $q->where('no_kamar', 'like', '%' . $search . '%')
+                  // Search in room description
+                  ->orWhere('deskripsi', 'like', '%' . $search . '%')
+                  // Search in room type
+                  ->orWhereHas('tipeKamar', function ($tipeQuery) use ($search) {
+                      $tipeQuery->where('tipe_kamar', 'like', '%' . $search . '%')
+                                ->orWhere('fasilitas', 'like', '%' . $search . '%');
+                  })
+                  // Search in package types
+                  ->orWhereHas('tipeKamar.paketKamar', function ($paketQuery) use ($search) {
+                      $paketQuery->where('jenis_paket', 'like', '%' . $search . '%');
+                  });
+            });
         }
 
         // Filter by room type
@@ -31,19 +46,14 @@ class RoomController extends Controller
             });
         }
 
-        // Filter by availability status (optional)
+        // Filter by availability status
         if ($request->filled('status')) {
             if ($request->status === 'available') {
-                $query->where('status', 'Kosong')
-                    ->whereDoesntHave('bookings', function ($q) {
-                        $q->where('status_booking', 'Aktif')
-                          ->where('tanggal_selesai', '>=', now());
-                    });
+                $query->where('status', 'Kosong');
             } elseif ($request->status === 'occupied') {
-                $query->whereHas('bookings', function ($q) {
-                    $q->where('status_booking', 'Aktif')
-                      ->where('tanggal_selesai', '>=', now());
-                });
+                $query->where('status', 'Terisi');
+            } elseif ($request->status === 'booked') {
+                $query->where('status', 'Dipesan');
             }
         }
 

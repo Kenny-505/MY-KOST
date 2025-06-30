@@ -119,7 +119,7 @@
                             
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-sm font-medium text-gray-600">Total Pembayaran</span>
-                                <span class="text-lg font-bold text-purple-600">Rp {{ number_format($payment->jumlah_pembayaran, 0, ',', '.') }}</span>
+                                <span class="text-lg font-bold text-purple-600">Rp {{ number_format($payment->jumlah_pembayaran, 3, ',', '.') }}</span>
                             </div>
                             
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
@@ -167,15 +167,15 @@
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Durasi</span>
-                                    <span class="font-medium text-gray-900">{{ $booking->total_durasi ?? 'Belum dihitung' }}</span>
+                                    <span class="font-medium text-gray-900">{{ $booking->getFormattedTotalDurasi() }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Check-in</span>
-                                    <span class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($booking->tanggal_mulai)->format('d M Y') }}</span>
+                                    <span class="font-medium text-gray-900">{{ $booking->tanggal_mulai->format('d M Y') }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Check-out</span>
-                                    <span class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($booking->tanggal_selesai)->format('d M Y') }}</span>
+                                    <span class="font-medium text-gray-900">{{ $booking->tanggal_selesai->format('d M Y') }}</span>
                                 </div>
                             </div>
                         </div>

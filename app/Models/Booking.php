@@ -104,6 +104,30 @@ class Booking extends Model
         return !is_null($this->id_teman);
     }
 
+    /**
+     * Get formatted total duration with 3 decimal places
+     */
+    public function getFormattedTotalDurasi(): string
+    {
+        if (empty($this->total_durasi)) {
+            return '-';
+        }
+
+        // Split the duration into number and unit (e.g., "1.5 bulan" -> ["1.5", "bulan"])
+        $parts = explode(' ', $this->total_durasi);
+        
+        if (count($parts) >= 2 && is_numeric($parts[0])) {
+            $number = (float) $parts[0];
+            $unit = $parts[1];
+            
+            // Format number with 3 decimal places
+            return number_format($number, 3, '.', '') . ' ' . $unit;
+        }
+        
+        // Return as-is if format is not recognized
+        return $this->total_durasi;
+    }
+
     public function getRouteKeyName()
     {
         return 'id_booking';

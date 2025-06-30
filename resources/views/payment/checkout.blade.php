@@ -88,7 +88,7 @@
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span class="text-gray-600">Harga per {{ strtolower($booking->paketKamar->jenis_paket) }}</span>
-                                <span class="font-medium text-gray-900">Rp {{ number_format($booking->paketKamar->harga, 0, ',', '.') }}</span>
+                                <span class="font-medium text-gray-900">Rp {{ number_format($booking->paketKamar->harga, 3, ',', '.') }}</span>
                             </div>
                         </div>
                     </div>
@@ -123,7 +123,7 @@
                                     </svg>
                                     <div>
                                         <p class="font-medium text-gray-900">Durasi</p>
-                                        <p class="text-blue-700">{{ $booking->total_durasi ?? 'Belum dihitung' }}</p>
+                                        <p class="text-blue-700">{{ $booking->getFormattedTotalDurasi() }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -173,32 +173,32 @@
             <div class="p-6">
                 <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Harga {{ $booking->paketKamar->jenis_paket }}</span>
-                        <span class="font-medium text-gray-900">Rp {{ number_format($booking->paketKamar->harga, 0, ',', '.') }}</span>
+                        <span class="text-gray-600">Harga Paket</span>
+                        <span class="font-medium text-gray-900">Rp {{ number_format($booking->paketKamar->harga, 3, ',', '.') }}</span>
                     </div>
                     
                     @if($booking->total_durasi && is_numeric(explode(' ', $booking->total_durasi)[0]))
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Durasi ({{ $booking->total_durasi }})</span>
-                        <span class="font-medium text-gray-900">× {{ explode(' ', $booking->total_durasi)[0] }}</span>
+                        <span class="text-gray-600">Durasi ({{ $booking->getFormattedTotalDurasi() }})</span>
+                        <span class="font-medium text-gray-900">× {{ number_format((float)explode(' ', $booking->total_durasi)[0], 3) }}</span>
                     </div>
                     @endif
                     
                     <div class="flex justify-between items-center text-sm text-gray-500">
                         <span>Subtotal</span>
-                        <span>Rp {{ number_format($payment->jumlah_pembayaran * 0.9, 0, ',', '.') }}</span>
+                        <span>Rp {{ number_format($payment->jumlah_pembayaran * 0.9, 3, ',', '.') }}</span>
                     </div>
                     
                     <div class="flex justify-between items-center text-sm text-gray-500">
                         <span>Biaya Admin (10%)</span>
-                        <span>Rp {{ number_format($payment->jumlah_pembayaran * 0.1, 0, ',', '.') }}</span>
+                        <span>Rp {{ number_format($payment->jumlah_pembayaran * 0.1, 3, ',', '.') }}</span>
                     </div>
                     
                     <hr class="border-gray-200">
                     
                     <div class="flex justify-between items-center">
                         <span class="text-lg font-semibold text-gray-900">Total Pembayaran</span>
-                        <span class="text-2xl font-bold text-green-600">Rp {{ number_format($payment->jumlah_pembayaran, 0, ',', '.') }}</span>
+                        <span class="text-2xl font-bold text-green-600">Rp {{ number_format($payment->jumlah_pembayaran, 3, ',', '.') }}</span>
                     </div>
                 </div>
             </div>

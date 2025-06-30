@@ -73,6 +73,6 @@ class Penghuni extends Model
 
     public function getRouteKeyName()
     {
-    return 'id_tipe_kamar';
+        return 'id_penghuni';
     }
 }

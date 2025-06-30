@@ -1,39 +1,49 @@
 <?php
-// Script to fix expired active bookings
-// Run this to automatically complete expired bookings
+// Fix Active Bookings Status Script
+// Run this from your project root: php fix_active_bookings.php
 
-require_once 'vendor/autoload.php';
-
-$app = require_once 'bootstrap/app.php';
-$app->make('Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables');
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
 use App\Models\Booking;
 use App\Models\Kamar;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
-// Update expired active bookings to 'Selesai'
-$expiredBookings = Booking::where('status_booking', 'Aktif')
-    ->where('tanggal_selesai', '<', Carbon::now())
-    ->get();
+echo "Starting booking status fix...\n";
 
-echo "Found " . $expiredBookings->count() . " expired active bookings\n";
-
-foreach ($expiredBookings as $booking) {
-    $booking->update(['status_booking' => 'Selesai']);
-    echo "Updated booking ID: " . $booking->id_booking . " to Selesai\n";
-    
-    // Update room status back to available if no other active bookings
-    $activeBookingsForRoom = Booking::where('id_kamar', $booking->id_kamar)
-        ->where('status_booking', 'Aktif')
-        ->count();
-    
-    if ($activeBookingsForRoom == 0) {
-        $kamar = Kamar::find($booking->id_kamar);
-        if ($kamar && $kamar->status != 'Kosong') {
-            $kamar->update(['status' => 'Kosong']);
-            echo "Updated room " . $kamar->no_kamar . " to Kosong\n";
+try {
+    DB::transaction(function () {
+        $activeBookings = Booking::where('status_booking', 'Aktif')->get();
+        
+        if ($activeBookings->isEmpty()) {
+            echo "No active bookings found. No changes needed.\n";
+            return;
         }
-    }
+
+        echo "Found " . $activeBookings->count() . " active bookings.\n";
+
+        $updatedKamarIds = [];
+
+        foreach ($activeBookings as $booking) {
+            $kamar = Kamar::find($booking->id_kamar);
+            if ($kamar && $kamar->status !== 'Dipesan') {
+                $kamar->status = 'Dipesan';
+                $kamar->save();
+                $updatedKamarIds[] = $kamar->id_kamar;
+                echo "Updated Kamar ID: " . $kamar->id_kamar . " (No: " . $kamar->no_kamar . ") to 'Dipesan'.\n";
+            }
+        }
+
+        if (empty($updatedKamarIds)) {
+            echo "All active bookings already have the correct 'Dipesan' room status.\n";
+        } else {
+            echo "Successfully updated " . count($updatedKamarIds) . " room statuses.\n";
+        }
+    });
+} catch (\Exception $e) {
+    echo "An error occurred: " . $e->getMessage() . "\n";
 }
 
-echo "Cleanup completed!\n";
+echo "Script finished.\n";

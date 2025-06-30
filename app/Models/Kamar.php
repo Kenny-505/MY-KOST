@@ -167,7 +167,7 @@ class Kamar extends Model
      */
     public function isAvailableForBooking(): bool
     {
-        return $this->status === 'Kosong' && !$this->hasActiveBookings();
+        return $this->status === 'Kosong';
     }
 
     public function getRouteKeyName()

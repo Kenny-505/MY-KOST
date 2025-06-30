@@ -17,17 +17,20 @@
                         <div class="flex flex-col md:flex-row gap-2">
                             <div class="flex-1">
                                 <input type="text" name="search" 
-                                       placeholder="Cari nomor kamar, fasilitas, atau lokasi..."
+                                       placeholder="Cari nomor kamar, tipe kamar, fasilitas, atau paket..."
                                        value="{{ request('search') }}"
                                        class="w-full px-4 py-3 border-0 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900">
                             </div>
                             <div class="md:w-auto">
-                                <button type="submit" 
+                                <button type="submit" id="searchButton"
                                         class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition duration-200 font-medium">
-                                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg id="searchIcon" class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                     </svg>
-                                    Cari
+                                    <svg id="loadingIcon" class="w-5 h-5 inline-block mr-2 animate-spin hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    <span id="searchText">Cari</span>
                                 </button>
                             </div>
                         </div>
@@ -107,6 +110,7 @@
                             <select id="status" name="status" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                     <option value="">Semua Status</option>
                                     <option value="available" {{ request('status') == 'available' ? 'selected' : '' }}>Tersedia</option>
+                                    <option value="booked" {{ request('status') == 'booked' ? 'selected' : '' }}>Dipesan</option>
                                     <option value="occupied" {{ request('status') == 'occupied' ? 'selected' : '' }}>Sedang Ditempati</option>
                                 </select>
                             </div>
@@ -225,8 +229,11 @@
                                 {{ $rooms->total() }} Kamar Ditemukan
                             </h3>
                             <p class="text-sm text-gray-600">
-                                @if(request('search'))
+                @if(request('search'))
                                     Hasil pencarian untuk "<span class="font-medium text-blue-600">{{ request('search') }}</span>"
+                                    @if(request()->hasAny(['type', 'capacity', 'status', 'min_price', 'max_price']))
+                                        dengan filter yang diterapkan
+                                    @endif
                                 @elseif(request()->hasAny(['type', 'capacity', 'status', 'min_price', 'max_price']))
                                     Dengan filter yang diterapkan
                                 @else
@@ -260,7 +267,16 @@
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                     </svg>
-                                    Status: {{ request('status') }}
+                                    Status: 
+                                    @if(request('status') == 'available')
+                                        Tersedia
+                                    @elseif(request('status') == 'booked')
+                                        Dipesan
+                                    @elseif(request('status') == 'occupied')
+                                        Sedang Ditempati
+                                    @else
+                                        {{ request('status') }}
+                                    @endif
                                 </span>
                             @endif
                                                          @if(request('min_price') || request('max_price'))
@@ -280,8 +296,8 @@
                                 </span>
                             @endif
                         </div>
-                    @endif
-                </div>
+                @endif
+            </div>
 
                 <!-- View Options -->
                 <div class="flex items-center justify-between sm:justify-end gap-4">
@@ -307,21 +323,21 @@
                         <button onclick="setGridView('grid')" id="gridView" 
                                 class="p-2 rounded-md bg-blue-500 text-white shadow-sm transition-all duration-200 view-toggle-btn">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                            </svg>
-                        </button>
+                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                </button>
                         <button onclick="setGridView('list')" id="listView" 
                                 class="p-2 rounded-md text-gray-400 hover:bg-gray-200 transition-all duration-200 view-toggle-btn">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
+                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Room Cards Grid -->
+            <!-- Room Cards Grid -->
         @if($rooms->count() > 0)
             <div id="roomsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 @foreach($rooms as $room)
@@ -352,28 +368,30 @@
 
                             <!-- Status Badge -->
                             <div class="absolute top-4 left-4">
-                                @if($room->hasActiveBookings())
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                                    @if($room->status === 'Kosong') bg-green-100 text-green-800
+                                    @elseif($room->status === 'Dipesan') bg-yellow-100 text-yellow-800
+                                    @elseif($room->status === 'Terisi') bg-red-100 text-red-800
+                                    @else bg-gray-100 text-gray-800 @endif">
+                                    @if($room->status === 'Kosong')
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                            Tersedia
+                                    @elseif($room->status === 'Dipesan')
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Dipesan
+                                    @elseif($room->status === 'Terisi')
                                         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                                         </svg>
                                         Sedang Ditempati
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-                                        @if($room->status === 'Kosong') bg-green-100 text-green-800
-                                        @elseif($room->status === 'Dipesan') bg-yellow-100 text-yellow-800
-                                        @else bg-red-100 text-red-800 @endif">
-                                        @if($room->status === 'Kosong')
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            Tersedia
                                         @else
                                             {{ $room->status }}
-                                        @endif
-                                    </span>
-                                @endif
+                                    @endif
+                                </span>
                             </div>
 
                             <!-- Room Type Badge -->
@@ -440,7 +458,7 @@
                                     Lihat Detail
                                 </a>
                                 
-                                @if($room->isAvailableForBooking())
+                                @if($room->status === 'Kosong')
                                     <a href="{{ route('user.booking.create', ['kamar_id' => $room->id_kamar]) }}" 
                                        class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-center py-2 px-4 rounded-lg transition duration-200 text-sm font-medium">
                                         Booking Sekarang
@@ -448,10 +466,12 @@
                                 @else
                                     <button disabled 
                                             class="flex-1 bg-gray-300 text-gray-500 text-center py-2 px-4 rounded-lg text-sm font-medium cursor-not-allowed">
-                                        @if($room->hasActiveBookings())
+                                        @if($room->status === 'Terisi')
                                             Sedang Ditempati
+                                        @elseif($room->status === 'Dipesan')
+                                            Sudah Dipesan
                                         @else
-                                            Tidak Tersedia
+                                        Tidak Tersedia
                                         @endif
                                     </button>
                                 @endif
@@ -604,10 +624,54 @@ function setGridView(viewType) {
 // Auto-submit form when filters change
 document.addEventListener('DOMContentLoaded', function() {
     const selects = document.querySelectorAll('#filterForm select');
+    const searchInput = document.querySelector('input[name="search"]');
+    let searchTimeout;
+    
+    // Auto-submit on filter change
     selects.forEach(select => {
         select.addEventListener('change', function() {
-            // Optional: Auto-submit on filter change
+            // Uncomment to enable auto-submit on filter change
             // document.getElementById('filterForm').submit();
+        });
+    });
+    
+    // Auto-submit search with debounce (main search bar)
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                // Show loading state
+                showSearchLoading();
+                
+                // Update the hidden search input in filter form
+                const filterSearchInput = document.querySelector('#filterForm input[name="search"]');
+                if (filterSearchInput) {
+                    filterSearchInput.value = this.value;
+                }
+                // Submit the main search form
+                this.closest('form').submit();
+            }, 800); // 800ms debounce
+        });
+    }
+    
+    // Show loading state for search
+    function showSearchLoading() {
+        const searchIcon = document.getElementById('searchIcon');
+        const loadingIcon = document.getElementById('loadingIcon');
+        const searchText = document.getElementById('searchText');
+        
+        if (searchIcon && loadingIcon && searchText) {
+            searchIcon.classList.add('hidden');
+            loadingIcon.classList.remove('hidden');
+            searchText.textContent = 'Mencari...';
+        }
+    }
+    
+    // Handle form submissions to show loading
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function() {
+            showSearchLoading();
         });
     });
     

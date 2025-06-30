@@ -273,7 +273,9 @@ class PengaduanController extends Controller
             // Response rate calculation
             $withResponse = Pengaduan::whereNotNull('response_admin')->count();
             if ($stats['total'] > 0) {
-                $stats['response_rate'] = round(($withResponse / $stats['total']) * 100, 1);
+                $stats['response_rate'] = round(($withResponse / $stats['total']) * 100, 3);
+            } else {
+                $stats['response_rate'] = 0;
             }
 
             // Average response time calculation (in hours)
@@ -282,7 +284,7 @@ class PengaduanController extends Controller
                                       ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, tanggal_pengaduan, tanggal_response)) as avg_hours')
                                       ->value('avg_hours');
             
-            $stats['avg_response_time'] = $avgResponseTime ? round($avgResponseTime, 1) : 0;
+            $stats['avg_response_time'] = $avgResponseTime ? round($avgResponseTime, 3) : 0;
 
             return $stats;
         });
