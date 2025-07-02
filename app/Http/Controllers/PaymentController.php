@@ -29,13 +29,26 @@ class PaymentController extends Controller
      */
     public function showPaymentForm(Booking $booking)
     {
-        // Validate user is involved in this booking
-        if ($booking->penghuni->id_user !== auth()->id()) {
+        // Get the current user and their penghuni record
+        $user = auth()->user();
+        $penghuni = $user->activePenghuni();
+        
+        if (!$penghuni) {
+            abort(403, 'Unauthorized access to booking.');
+        }
+        
+        // Validate user is involved in this booking (either as primary or secondary tenant)
+        if ($booking->id_penghuni !== $penghuni->id_penghuni && 
+            $booking->id_teman !== $penghuni->id_penghuni) {
             abort(403, 'Unauthorized access to booking.');
         }
 
         // Load related data
         $booking->load(['kamar.tipeKamar', 'paketKamar', 'penghuni.user']);
+        
+        if ($booking->id_teman) {
+            $booking->load(['teman.user']);
+        }
 
         // Get or create payment record for this booking (latest payment)
         $payment = Pembayaran::where('id_booking', $booking->id_booking)
@@ -67,57 +80,89 @@ class PaymentController extends Controller
     public function createPayment(Request $request)
     {
         try {
-            $request->validate([
+            // Jika request adalah JSON, ambil data dari JSON
+            $data = $request->isJson() ? $request->json()->all() : $request->all();
+            
+            $validator = \Illuminate\Support\Facades\Validator::make($data, [
                 'booking_id' => 'required|exists:booking,id_booking',
-                'payment_type' => 'required|in:Booking,Extension,Additional'
+                'payment_type' => 'required|in:Booking,Extension,Additional',
+                'payment_method' => 'required|string'
             ]);
 
-            $booking = Booking::with(['penghuni.user', 'kamar', 'paketKamar'])->findOrFail($request->booking_id);
-            $user = $booking->penghuni->user;
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => $validator->errors()->first()
+                ], 422);
+            }
+
+            $booking = Booking::with(['penghuni.user', 'teman.user', 'kamar', 'paketKamar'])->findOrFail($data['booking_id']);
+            
+            // Get the current user and their penghuni record
+            $currentUser = auth()->user();
+            $currentPenghuni = $currentUser->activePenghuni();
+            
+            if (!$currentPenghuni) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Unauthorized. User does not have active penghuni status.'
+                ], 403);
+            }
+            
+            // Check if current user is authorized to make payment for this booking
+            if ($booking->id_penghuni !== $currentPenghuni->id_penghuni && 
+                $booking->id_teman !== $currentPenghuni->id_penghuni) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Unauthorized. You are not associated with this booking.'
+                ], 403);
+            }
 
             // Generate unique order ID
             $orderId = 'MYKOST-' . time() . '-' . $booking->id_booking;
 
-            // Prepare payment parameters
+            // Prepare payment parameters using the current user's information
             $params = [
                 'order_id' => $orderId,
-                'gross_amount' => $booking->paketKamar->harga,
-                'customer_name' => $user->nama,
-                'customer_email' => $user->email,
-                'customer_phone' => $user->no_hp,
+                'gross_amount' => (int)$booking->paketKamar->harga,
+                'customer_name' => $currentUser->nama,
+                'customer_email' => $currentUser->email,
+                'customer_phone' => $currentUser->no_hp,
                 'items' => [[
                     'id' => $booking->kamar->id_kamar,
-                    'price' => $booking->paketKamar->harga,
+                    'price' => (int)$booking->paketKamar->harga,
                     'quantity' => 1,
                     'name' => "Kamar {$booking->kamar->no_kamar} ({$booking->paketKamar->jenis_paket})"
                 ]]
             ];
 
             // Create payment record
-            $payment = new Pembayaran();
-            $payment->id_user = $user->id;
-            $payment->id_booking = $booking->id_booking;
-            $payment->id_kamar = $booking->id_kamar;
-            $payment->tanggal_pembayaran = now();
-            $payment->status_pembayaran = 'Belum bayar';
-            $payment->jumlah_pembayaran = $booking->paketKamar->harga;
-            $payment->payment_type = $request->payment_type;
+            $payment = Pembayaran::where('id_booking', $booking->id_booking)
+                                  ->where('status_pembayaran', 'Belum bayar')
+                                  ->orderBy('id_pembayaran', 'desc')
+                                  ->first();
+            
+            if (!$payment) {
+                $payment = new Pembayaran();
+                $payment->id_user = $currentUser->id; // Use the current user's ID
+                $payment->id_booking = $booking->id_booking;
+                $payment->id_kamar = $booking->id_kamar;
+                $payment->tanggal_pembayaran = now();
+                $payment->status_pembayaran = 'Belum bayar';
+                $payment->jumlah_pembayaran = $booking->paketKamar->harga;
+                $payment->payment_type = $data['payment_type'];
+            }
+            
             $payment->midtrans_order_id = $orderId;
             $payment->save();
 
             // Get payment URL from Midtrans
             $paymentUrl = $this->midtransService->createPayment($params);
 
-            // Generate QR Code
-            $qrCode = base64_encode(QrCode::format('png')
-                ->size(300)
-                ->errorCorrection('H')
-                ->generate($paymentUrl));
-
+            // Return success response
             return response()->json([
                 'success' => true,
                 'payment_url' => $paymentUrl,
-                'qr_code' => $qrCode,
                 'order_id' => $orderId
             ]);
 
@@ -235,12 +280,35 @@ class PaymentController extends Controller
      */
     public function paymentSuccess(string $orderId)
     {
-        $payment = Pembayaran::where('midtrans_order_id', $orderId)->firstOrFail();
-        
-        return view('payment.success', [
-            'payment' => $payment,
-            'booking' => $payment->booking
-        ]);
+        try {
+            $payment = Pembayaran::with(['booking.penghuni.user', 'booking.kamar', 'booking.paketKamar'])
+                ->where('midtrans_order_id', $orderId)
+                ->firstOrFail();
+            
+            // Jika status pembayaran belum diubah oleh callback, ubah manual
+            if ($payment->status_pembayaran === 'Belum bayar') {
+                DB::beginTransaction();
+                $payment->status_pembayaran = 'Lunas';
+                $payment->save();
+                
+                // Update related records
+                $this->handleBookingPayment($payment);
+                DB::commit();
+            }
+            
+            // Login pengguna secara otomatis jika belum login
+            if (!auth()->check()) {
+                auth()->login($payment->booking->penghuni->user);
+            }
+            
+            return view('payment.success', [
+                'payment' => $payment,
+                'booking' => $payment->booking
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error showing payment success: '.$e->getMessage());
+            return redirect()->route('welcome')->with('error', 'Terjadi kesalahan saat menampilkan halaman sukses. Silakan periksa status pembayaran Anda di dashboard.');
+        }
     }
 
     /**
@@ -251,11 +319,83 @@ class PaymentController extends Controller
      */
     public function paymentFailed(string $orderId)
     {
-        $payment = Pembayaran::where('midtrans_order_id', $orderId)->firstOrFail();
-        
-        return view('payment.failed', [
-            'payment' => $payment,
-            'booking' => $payment->booking
-        ]);
+        try {
+            $payment = Pembayaran::with(['booking.penghuni.user', 'booking.kamar', 'booking.paketKamar'])
+                ->where('midtrans_order_id', $orderId)
+                ->firstOrFail();
+            
+            // Jika status pembayaran belum diubah, ubah ke gagal
+            if ($payment->status_pembayaran === 'Belum bayar') {
+                $payment->status_pembayaran = 'Gagal';
+                $payment->save();
+            }
+            
+            // Login pengguna secara otomatis jika belum login
+            if (!auth()->check()) {
+                auth()->login($payment->booking->penghuni->user);
+            }
+            
+            return view('payment.failed', [
+                'payment' => $payment,
+                'booking' => $payment->booking
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error showing payment failed: '.$e->getMessage());
+            return redirect()->route('welcome')->with('error', 'Terjadi kesalahan saat menampilkan halaman gagal. Silakan periksa status pembayaran Anda di dashboard.');
+        }
+    }
+
+    /**
+     * Check payment status
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkStatus(Request $request)
+    {
+        try {
+            $orderId = $request->query('order_id');
+            
+            if (!$orderId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order ID is required'
+                ], 400);
+            }
+            
+            $payment = Pembayaran::where('midtrans_order_id', $orderId)->first();
+            
+            if (!$payment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment not found'
+                ], 404);
+            }
+            
+            // Redirect based on payment status
+            if ($payment->status_pembayaran === 'Lunas') {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('payment.success', $orderId)
+                ]);
+            } else if ($payment->status_pembayaran === 'Gagal') {
+                return response()->json([
+                    'success' => false,
+                    'redirect' => route('payment.failed', $orderId)
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment is still pending',
+                    'status' => $payment->status_pembayaran
+                ]);
+            }
+        } catch (Exception $e) {
+            Log::error('Payment status check failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to check payment status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 } 

@@ -72,6 +72,11 @@
                             </div>
 
                             <div>
+                                <label class="block text-sm font-medium text-gray-700">Dibuat Oleh</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $pengaduan->penghuni->user->nama }}</p>
+                            </div>
+
+                            <div>
                                 <label class="block text-sm font-medium text-gray-700">Judul Pengaduan</label>
                                 <p class="mt-1 text-lg font-medium text-gray-900">{{ $pengaduan->judul_pengaduan }}</p>
                             </div>
@@ -197,79 +202,82 @@
                 <!-- Timeline -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Timeline Pengaduan</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-6">Timeline Pengaduan</h3>
                         <div class="flow-root">
-                            <ul class="-mb-8">
+                            <ul class="space-y-6">
+                                <!-- Step 1: Pengaduan dibuat -->
                                 <li>
-                                    <div class="relative pb-8">
+                                    <div class="relative flex items-center">
                                         @if($pengaduan->status !== 'Menunggu')
-                                            <div class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></div>
+                                            <div class="absolute top-8 left-6 w-0.5 h-full bg-gray-200"></div>
                                         @endif
-                                        <div class="relative flex space-x-3">
-                                            <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                                        <div class="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
+                                            <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-4 ring-white shadow">
                                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                 </svg>
                                             </div>
-                                            <div class="min-w-0 flex-1 pt-1.5">
-                                                <div>
-                                                    <p class="text-sm text-gray-900 font-medium">Pengaduan dibuat</p>
-                                                    <p class="text-sm text-gray-500">{{ $pengaduan->tanggal_pengaduan->format('d F Y, H:i') }} WIB</p>
-                                                </div>
+                                        </div>
+                                        <div class="min-w-0 flex-1 ml-4">
+                                            <div class="text-sm text-gray-900">
+                                                <p class="font-medium">Pengaduan dibuat</p>
+                                                <p class="text-gray-500 mt-1">{{ $pengaduan->tanggal_pengaduan->format('d F Y, H:i') }} WIB</p>
                                             </div>
                                         </div>
                                     </div>
                                 </li>
                                 
+                                <!-- Step 2: Admin memproses -->
                                 @if($pengaduan->status !== 'Menunggu')
                                 <li>
-                                    <div class="relative pb-8">
+                                    <div class="relative flex items-center">
                                         @if($pengaduan->status === 'Selesai')
-                                            <div class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></div>
+                                            <div class="absolute top-8 left-6 w-0.5 h-full bg-gray-200"></div>
                                         @endif
-                                        <div class="relative flex space-x-3">
-                                            <div class="h-8 w-8 rounded-full bg-orange-500 flex items-center justify-center ring-8 ring-white">
+                                        <div class="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
+                                            <div class="h-8 w-8 rounded-full bg-orange-500 flex items-center justify-center ring-4 ring-white shadow">
                                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                                 </svg>
                                             </div>
-                                            <div class="min-w-0 flex-1 pt-1.5">
-                                                <div>
-                                                    <p class="text-sm text-gray-900 font-medium">
-                                                        @if($pengaduan->hasResponse())
-                                                            Admin memberikan response dan memproses
-                                                        @else
-                                                            Admin memproses pengaduan
-                                                        @endif
-                                                    </p>
-                                                    <p class="text-sm text-gray-500">
-                                                        @if($pengaduan->hasResponse())
-                                                            {{ $pengaduan->tanggal_response->format('d F Y, H:i') }} WIB
-                                                        @else
-                                                            {{ $pengaduan->updated_at->format('d F Y, H:i') }} WIB
-                                                        @endif
-                                                    </p>
-                                                </div>
+                                        </div>
+                                        <div class="min-w-0 flex-1 ml-4">
+                                            <div class="text-sm text-gray-900">
+                                                <p class="font-medium">
+                                                    @if($pengaduan->hasResponse())
+                                                        Admin memberikan response dan memproses
+                                                    @else
+                                                        Admin memproses pengaduan
+                                                    @endif
+                                                </p>
+                                                <p class="text-gray-500 mt-1">
+                                                    @if($pengaduan->hasResponse())
+                                                        {{ $pengaduan->tanggal_response->format('d F Y, H:i') }} WIB
+                                                    @else
+                                                        {{ $pengaduan->updated_at->format('d F Y, H:i') }} WIB
+                                                    @endif
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
                                 </li>
                                 @endif
 
+                                <!-- Step 3: Konfirmasi selesai -->
                                 @if($pengaduan->status === 'Selesai')
                                 <li>
-                                    <div class="relative">
-                                        <div class="relative flex space-x-3">
-                                            <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
+                                    <div class="relative flex items-center">
+                                        <div class="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
+                                            <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-4 ring-white shadow">
                                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                                 </svg>
                                             </div>
-                                            <div class="min-w-0 flex-1 pt-1.5">
-                                                <div>
-                                                    <p class="text-sm text-gray-900 font-medium">Anda konfirmasi selesai</p>
-                                                    <p class="text-sm text-gray-500">{{ $pengaduan->updated_at->format('d F Y, H:i') }} WIB</p>
-                                                </div>
+                                        </div>
+                                        <div class="min-w-0 flex-1 ml-4">
+                                            <div class="text-sm text-gray-900">
+                                                <p class="font-medium">Anda konfirmasi selesai</p>
+                                                <p class="text-gray-500 mt-1">{{ $pengaduan->updated_at->format('d F Y, H:i') }} WIB</p>
                                             </div>
                                         </div>
                                     </div>

@@ -96,4 +96,26 @@ class Pembayaran extends Model
     {
         return $this->status_pembayaran === 'Gagal';
     }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'id_pembayaran';
+    }
+
+    /**
+     * Refresh payment status from database
+     * 
+     * @return self
+     */
+    public function refreshStatus(): self
+    {
+        $fresh = self::find($this->id_pembayaran);
+        if ($fresh) {
+            $this->status_pembayaran = $fresh->status_pembayaran;
+        }
+        return $this;
+    }
 }

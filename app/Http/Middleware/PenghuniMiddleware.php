@@ -22,7 +22,9 @@ class PenghuniMiddleware
 
         // Check if user has active penghuni status
         if (!auth()->user()->hasActivePenghuni()) {
-            abort(403, 'Access denied. Active penghuni status required.');
+            // Redirect to user dashboard with informative message instead of showing 403 error
+            return redirect()->route('user.dashboard')
+                ->with('info', 'Anda tidak memiliki status penghuni aktif. Silakan melakukan booking kamar terlebih dahulu untuk mengakses fitur penghuni.');
         }
 
         return $next($request);

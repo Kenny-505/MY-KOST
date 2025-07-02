@@ -147,11 +147,16 @@ class BookingController extends Controller
                 throw new \Exception('Kamar tidak tersedia. Mungkin sudah di-booking oleh penghuni lain.');
             }
 
-            // Create or find penghuni for main user
+            // Create or find penghuni for main user and ensure active status
             $penghuni = Penghuni::firstOrCreate(
                 ['id_user' => $user->id],
                 ['status_penghuni' => 'Aktif']
             );
+            // Ensure the penghuni is active (handle case where user previously checked out)
+            if ($penghuni->status_penghuni !== 'Aktif') {
+                $penghuni->status_penghuni = 'Aktif';
+                $penghuni->save();
+            }
 
             // Handle friend booking based on package jumlah_penghuni
             $temanId = null;
@@ -164,11 +169,16 @@ class BookingController extends Controller
                     throw new \Exception('Teman dengan email tersebut tidak ditemukan atau bukan User');
                 }
                 
-                // Create or find penghuni for friend
+                // Create or find penghuni for friend and ensure active status
                 $temanPenghuni = Penghuni::firstOrCreate(
                     ['id_user' => $temanUser->id],
                     ['status_penghuni' => 'Aktif']
                 );
+                // Ensure the friend's penghuni is active
+                if ($temanPenghuni->status_penghuni !== 'Aktif') {
+                    $temanPenghuni->status_penghuni = 'Aktif';
+                    $temanPenghuni->save();
+                }
                 $temanId = $temanPenghuni->id_penghuni;
                 
                 \Log::info('Friend booking created:', [

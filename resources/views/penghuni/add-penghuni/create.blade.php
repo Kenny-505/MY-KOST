@@ -196,11 +196,12 @@
                     <div class="space-y-4">
                         <!-- Current Package -->
                         <div class="bg-white rounded-lg p-4">
-                            <h4 class="font-medium text-gray-800 mb-2">Paket Saat Ini</h4>
+                            <h4 class="font-medium text-gray-800 mb-2">Paket Tambah Teman</h4>
                             <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">{{ $booking->paketKamar->jenis_paket }} (1 Orang)</span>
-                                <span class="font-medium">Rp {{ number_format($booking->paketKamar->harga, 0, ',', '.') }}</span>
+                                <span class="text-gray-600">{{ $addFriendPackage->jenis_paket }} ({{ $addFriendPackage->jumlah_penghuni }} Orang)</span>
+                                <span class="font-medium">Rp {{ number_format($addFriendPackage->harga, 0, ',', '.') }}</span>
                             </div>
+                             <p class="text-xs text-gray-500 mt-2">Biaya tambahan akan dihitung secara prorata saat paket dipilih.</p>
                         </div>
 
                         <!-- New Package -->

@@ -96,7 +96,10 @@
         </div>
 
         @php
-            $statuses = $kamar->getCollection()->groupBy('status');
+            // Get accurate counts from all rooms, not just paginated ones
+            $kamarKosong = \App\Models\Kamar::where('status', 'Kosong')->count();
+            $kamarDipesan = \App\Models\Kamar::where('status', 'Dipesan')->count();
+            $kamarTerisi = \App\Models\Kamar::where('status', 'Terisi')->count();
         @endphp
 
         <div class="bg-white rounded-xl shadow-sm p-6">
@@ -108,7 +111,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Kosong</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $statuses->get('Kosong', collect())->count() }}</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $kamarKosong }}</p>
                 </div>
             </div>
         </div>
@@ -122,7 +125,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Dipesan</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $statuses->get('Dipesan', collect())->count() }}</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $kamarDipesan }}</p>
                 </div>
             </div>
         </div>
@@ -136,7 +139,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Terisi</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $statuses->get('Terisi', collect())->count() }}</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $kamarTerisi }}</p>
                 </div>
             </div>
         </div>

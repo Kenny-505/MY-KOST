@@ -98,7 +98,7 @@
                     </div>
                     @if($payment->status_pembayaran == 'Lunas')
                     <div class="mt-2 text-right">
-                         <a href="#" class="text-sm text-blue-600 hover:underline">Lihat Invoice</a>
+                         <a href="{{ route('penghuni.history.invoice', $payment->id_pembayaran) }}" class="text-sm text-blue-600 hover:underline">Lihat Invoice</a>
                     </div>
                     @endif
                 </div>
@@ -120,9 +120,9 @@
                                      Tambah Teman
                                  </a>
                              @endif
-                              <a href="#" class="inline-flex justify-center items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 focus:outline-none focus:border-red-700 focus:ring focus:ring-red-200 active:bg-red-600 disabled:opacity-25 transition">
+                              <button onclick="confirmCheckout({{ $booking->id_booking }})" class="inline-flex justify-center items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 focus:outline-none focus:border-red-700 focus:ring focus:ring-red-200 active:bg-red-600 disabled:opacity-25 transition">
                                  Checkout
-                             </a>
+                             </button>
                          </div>
                      </div>
                  @endif
@@ -130,4 +130,63 @@
         </div>
     </div>
 </div>
-@endsection 
+
+<!-- Checkout Confirmation Modal -->
+<div id="checkoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Konfirmasi Checkout</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">
+                    Apakah Anda yakin ingin melakukan checkout dari kamar <strong>{{ $booking->kamar->no_kamar }}</strong>?
+                </p>
+                <p class="text-sm text-red-600 mt-2">
+                    Aksi ini akan mengakhiri sewa kamar Anda dan mengubah status booking menjadi selesai.
+                </p>
+            </div>
+            <div class="items-center px-4 py-3">
+                <form id="checkoutForm" method="POST" action="{{ route('penghuni.checkout', $booking) }}">
+                    @csrf
+                    <div class="flex gap-x-3">
+                        <button type="button" 
+                                onclick="closeCheckoutModal()" 
+                                class="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Batal
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                            Ya, Checkout
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('scripts')
+<script>
+function confirmCheckout(bookingId) {
+    document.getElementById('checkoutModal').classList.remove('hidden');
+}
+
+function closeCheckoutModal() {
+    document.getElementById('checkoutModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('checkoutModal');
+    if (event.target == modal) {
+        closeCheckoutModal();
+    }
+}
+</script>
+@endpush 

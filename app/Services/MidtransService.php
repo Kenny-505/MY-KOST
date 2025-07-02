@@ -46,10 +46,20 @@ class MidtransService
                 'phone' => $params['customer_phone'] ?? '',
             ];
 
+            // URL kembali setelah pembayaran
+            $finish_url = route('payment.success', ['orderId' => $params['order_id']]);
+            $error_url = route('payment.failed', ['orderId' => $params['order_id']]);
+            
+            $callbacks = [
+                'finish' => $finish_url,
+                'error' => $error_url,
+            ];
+
             $transaction_data = [
                 'transaction_details' => $transaction_details,
                 'item_details' => $item_details,
-                'customer_details' => $customer_details
+                'customer_details' => $customer_details,
+                'callbacks' => $callbacks
             ];
 
             // Create payment URL

@@ -49,6 +49,38 @@
                             </div>
                         </div>
                         
+                        <div class="border-t border-gray-200 pt-4 mb-4">
+                            <h4 class="text-md font-semibold text-gray-900 mb-2">Penghuni</h4>
+                            <ul class="space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    <span class="text-gray-800">
+                                        {{ $booking->penghuni->user->nama }}
+                                        @if($booking->id_penghuni == auth()->user()->activePenghuni()->id_penghuni)
+                                            <span class="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded ml-2">Anda</span>
+                                        @endif
+                                        <span class="text-xs text-gray-500 ml-1">(Penghuni Utama)</span>
+                                    </span>
+                                </li>
+                                @if($booking->id_teman)
+                                    <li class="flex items-center">
+                                        <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                        <span class="text-gray-800">
+                                            {{ $booking->teman->user->nama }}
+                                            @if($booking->id_teman == auth()->user()->activePenghuni()->id_penghuni)
+                                                <span class="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded ml-2">Anda</span>
+                                            @endif
+                                            <span class="text-xs text-gray-500 ml-1">(Penghuni Tambahan)</span>
+                                        </span>
+                                    </li>
+                                @endif
+                            </ul>
+                        </div>
+                        
                         <div class="border-t border-gray-200 pt-4">
                             <div class="space-y-3">
                                 <div class="flex justify-between">
@@ -305,19 +337,66 @@
 </div>
 
 <script>
-document.getElementById('paymentForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
-    
-    if (!selectedMethod) {
-        alert('Silakan pilih metode pembayaran terlebih dahulu');
-        return;
-    }
-    
-    // Here you would typically integrate with actual payment gateway
-    // For now, we'll show a simple message
-    alert('Fitur pembayaran akan diintegrasikan dengan Midtrans di fase selanjutnya');
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentForm = document.getElementById('paymentForm');
+
+    paymentForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Validasi metode pembayaran
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+        if (!selectedMethod) {
+            alert('Silahkan pilih metode pembayaran terlebih dahulu');
+            return;
+        }
+
+        // Disable button to prevent multiple submissions
+        const submitButton = paymentForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Memproses...';
+
+        // Buat objek data untuk dikirim sebagai JSON
+        const data = {
+            booking_id: {{ $booking->id_booking }},
+            payment_type: '{{ $payment->payment_type }}',
+            payment_method: selectedMethod.value
+        };
+
+        // Log untuk debugging
+        console.log('Sending payment request:', data);
+
+        // Kirim request ke endpoint createPayment
+        fetch('{{ route("payment.create") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                // Redirect ke payment URL
+                window.location.href = data.payment_url;
+            } else {
+                alert('Terjadi kesalahan: ' + (data.message || 'Tidak dapat memproses pembayaran'));
+                submitButton.disabled = false;
+                submitButton.textContent = 'Bayar Sekarang - Rp {{ number_format($payment->jumlah_pembayaran, 0, ',', '.') }}';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
+            submitButton.disabled = false;
+            submitButton.textContent = 'Bayar Sekarang - Rp {{ number_format($payment->jumlah_pembayaran, 0, ',', '.') }}';
+        });
+    });
 });
 </script>
 @endsection 

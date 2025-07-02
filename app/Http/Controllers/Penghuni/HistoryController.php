@@ -8,9 +8,11 @@ use App\Models\Pembayaran;
 use App\Models\User;
 use App\Models\Penghuni;
 use App\Models\PaketKamar;
+use App\Mail\CheckoutConfirmation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
 class HistoryController extends Controller
@@ -62,6 +64,12 @@ class HistoryController extends Controller
     }
 
     // Extension Methods
+    public function showExtendForm(Booking $booking)
+    {
+        // This method calls the existing createExtension method
+        return $this->createExtension($booking);
+    }
+
     public function createExtension(Booking $booking)
     {
         $user = Auth::user();
@@ -90,6 +98,12 @@ class HistoryController extends Controller
         $remainingDays = $today->diffInDays($currentEndDate, false);
 
         return view('penghuni.extension.create', compact('booking', 'availablePackages', 'remainingDays'));
+    }
+
+    public function extend(Request $request, Booking $booking)
+    {
+        // This method forwards to the existing storeExtension method
+        return $this->storeExtension($request, $booking);
     }
 
     public function storeExtension(Request $request, Booking $booking)
@@ -167,9 +181,9 @@ class HistoryController extends Controller
                 'status_booking' => 'Aktif'
             ]);
 
-            // Create payment record for extension
+            // Create payment record for extension using current user's ID
             $payment = Pembayaran::create([
-                'id_user' => $user->id,
+                'id_user' => $user->id, // Either primary or secondary tenant can pay
                 'id_booking' => $extensionBooking->id_booking,
                 'id_kamar' => $booking->id_kamar,
                 'tanggal_pembayaran' => now(),
@@ -227,10 +241,13 @@ class HistoryController extends Controller
             return redirect()->back()->with('error', 'Tipe kamar ini tidak mendukung 2 penghuni.');
         }
 
+        // Get the target package for display in the summary
+        $addFriendPackage = $doublePackages->first();
+
         // Load relationship data
         $booking->load(['kamar.tipeKamar', 'paketKamar']);
-
-        return view('penghuni.add-penghuni.create', compact('booking', 'doublePackages'));
+        
+        return view('penghuni.add-penghuni.create', compact('booking', 'doublePackages', 'addFriendPackage'));
     }
 
     public function addPenghuni(Request $request, Booking $booking)
@@ -257,24 +274,37 @@ class HistoryController extends Controller
             'agree_terms.accepted' => 'Anda harus menyetujui syarat dan ketentuan.',
         ]);
 
-        // Get friend user and penghuni
+        // Get friend user
         $friendUser = User::where('email', $request->friend_email)->first();
-        $friendPenghuni = $friendUser->activePenghuni();
 
-        if (!$friendPenghuni) {
+        // Check if friend user exists and is not the same as current user
+        if (!$friendUser) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['friend_email' => 'Teman belum terdaftar sebagai penghuni atau status tidak aktif.']);
+                ->withErrors(['friend_email' => 'Email teman tidak ditemukan dalam sistem MYKOST.']);
+        }
+
+        if ($friendUser->id === $user->id) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['friend_email' => 'Anda tidak dapat menambahkan diri sendiri sebagai teman.']);
         }
 
         // Check if friend is already in another active booking
-        $friendActiveBooking = Booking::where(function($query) use ($friendPenghuni) {
-                $query->where('id_penghuni', $friendPenghuni->id_penghuni)
-                      ->orWhere('id_teman', $friendPenghuni->id_penghuni);
-            })
-            ->where('status_booking', 'Aktif')
-            ->where('tanggal_selesai', '>=', now())
-            ->exists();
+        // For users who have penghuni records, check by penghuni_id
+        // For new users who don't have penghuni records yet, they're automatically available
+        $friendActiveBooking = false;
+        $friendPenghuni = $friendUser->activePenghuni();
+        
+        if ($friendPenghuni) {
+            $friendActiveBooking = Booking::where(function($query) use ($friendPenghuni) {
+                    $query->where('id_penghuni', $friendPenghuni->id_penghuni)
+                          ->orWhere('id_teman', $friendPenghuni->id_penghuni);
+                })
+                ->where('status_booking', 'Aktif')
+                ->where('tanggal_selesai', '>=', now())
+                ->exists();
+        }
 
         if ($friendActiveBooking) {
             return redirect()->back()
@@ -325,6 +355,18 @@ class HistoryController extends Controller
         DB::beginTransaction();
 
         try {
+            // Create or reactivate penghuni record for friend
+            $friendPenghuni = Penghuni::firstOrCreate(
+                ['id_user' => $friendUser->id],
+                ['status_penghuni' => 'Aktif']
+            );
+            
+            // Ensure the friend's penghuni is active (handle case where friend previously checked out)
+            if ($friendPenghuni->status_penghuni !== 'Aktif') {
+                $friendPenghuni->status_penghuni = 'Aktif';
+                $friendPenghuni->save();
+            }
+
             // Update booking with friend
             $booking->update([
                 'id_teman' => $friendPenghuni->id_penghuni,
@@ -361,22 +403,105 @@ class HistoryController extends Controller
         }
     }
 
-    // Checkout Methods - To be implemented in Phase 7
+    // Checkout Methods
     public function checkout(Request $request, Booking $booking)
     {
         $user = Auth::user();
         $penghuni = $user->activePenghuni();
 
-        // Validate access
+        // Validate access - user must be either main tenant or roommate
         if ($booking->id_penghuni !== $penghuni->id_penghuni && 
             $booking->id_teman !== $penghuni->id_penghuni) {
             abort(403, 'Akses ditolak.');
         }
 
-        // TODO: Implement checkout logic
-        // Handle individual checkout for multi-tenant
-        // This will be implemented in Phase 7
+        // Check if booking is active
+        if ($booking->status_booking !== 'Aktif') {
+            return redirect()->route('penghuni.history.show', $booking)
+                ->with('error', 'Booking ini sudah tidak aktif.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Check if this is a shared room (has roommate)
+            if ($booking->teman) {
+                // If the person checking out is the main tenant
+                if ($booking->id_penghuni === $penghuni->id_penghuni) {
+                    // Transfer main tenant to roommate
+                    $booking->update([
+                        'id_penghuni' => $booking->id_teman,
+                        'id_teman' => null
+                    ]);
+                    
+                    // Update the current user's penghuni status to inactive
+                    $penghuni->update(['status_penghuni' => 'Non-aktif']);
+                    
+                    // Send email notification
+                    Mail::to($user->email)->send(new CheckoutConfirmation($booking, 'transferred'));
+                    
+                    $message = 'Checkout berhasil. Teman kamar Anda sekarang menjadi penyewa utama.';
+                } else {
+                    // If roommate is checking out, just remove them
+                    $booking->update(['id_teman' => null]);
+                    
+                    // Update the current user's penghuni status to inactive
+                    $penghuni->update(['status_penghuni' => 'Non-aktif']);
+                    
+                    // Send email notification
+                    Mail::to($user->email)->send(new CheckoutConfirmation($booking, 'roommate_left'));
+                    
+                    $message = 'Checkout berhasil. Anda telah keluar dari kamar.';
+                }
+            } else {
+                // Single occupancy - end the booking completely
+                $booking->update(['status_booking' => 'Selesai']);
+                
+                // Update room status to available
+                $booking->kamar->update(['status' => 'Kosong']);
+                
+                // Update penghuni status to inactive
+                $penghuni->update(['status_penghuni' => 'Non-aktif']);
+                
+                // Send email notification
+                Mail::to($user->email)->send(new CheckoutConfirmation($booking, 'single'));
+                
+                $message = 'Checkout berhasil. Kamar sekarang tersedia untuk disewa.';
+            }
+
+            DB::commit();
+            
+            // After checkout, user is no longer a penghuni, so redirect to user dashboard
+            return redirect()->route('user.dashboard')->with('success', $message . ' Anda sekarang dapat menggunakan sistem sebagai user biasa.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('penghuni.history.show', $booking)
+                ->with('error', 'Terjadi kesalahan saat checkout: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display invoice details
+     *
+     * @param int $pembayaranId
+     * @return \Illuminate\Http\Response
+     */
+    public function viewInvoice($pembayaranId)
+    {
+        $payment = \App\Models\Pembayaran::with(['booking.penghuni', 'booking.kamar', 'booking.paketKamar'])
+            ->where('id_pembayaran', $pembayaranId)
+            ->firstOrFail();
         
-        return redirect()->route('penghuni.history.index')->with('info', 'Checkout fitur akan diimplementasikan di Phase 7');
+        // Pastikan penghuni hanya bisa melihat invoice miliknya
+        if ($payment->id_user !== auth()->id()) {
+            abort(403, 'Unauthorized access to payment invoice.');
+        }
+        
+        return view('payment.success', [
+            'payment' => $payment,
+            'booking' => $payment->booking,
+            'isViewingHistory' => true
+        ]);
     }
 }

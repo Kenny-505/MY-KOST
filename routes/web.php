@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\TipeKamarController as AdminTipeKamarController;
 use App\Http\Controllers\Admin\PaketKamarController as AdminPaketKamarController;
 use App\Http\Controllers\Admin\PengaduanController as AdminPengaduanController;
 use App\Http\Controllers\Admin\PenghuniController as AdminPenghuniController;
+use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\RoomController as UserRoomController;
 use App\Http\Controllers\User\BookingController as UserBookingController;
@@ -61,7 +62,15 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Penghuni Management
     Route::get('penghuni', [AdminPenghuniController::class, 'index'])->name('penghuni.index');
     Route::get('penghuni/{penghuni}', [AdminPenghuniController::class, 'show'])->name('penghuni.show');
-    Route::post('penghuni/{penghuni}/force-checkout', [AdminPenghuniController::class, 'forceCheckout'])->name('penghuni.forceCheckout');
+    Route::post('penghuni/{penghuni}/force-checkout', [AdminPenghuniController::class, 'forceCheckout'])->name('penghuni.force-checkout');
+
+    
+    // Invoice & Transaction Management
+    Route::get('invoice', [AdminInvoiceController::class, 'index'])->name('invoice.index');
+    Route::get('invoice/export', [AdminInvoiceController::class, 'export'])->name('invoice.export');
+    Route::get('invoice/{pembayaran}', [AdminInvoiceController::class, 'show'])->name('invoice.show');
+    Route::patch('invoice/{pembayaran}/update-status', [AdminInvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
+    Route::get('invoice/{pembayaran}/pdf', [AdminInvoiceController::class, 'generatePDF'])->name('invoice.generatePDF');
     
     // Reports & Export Routes
     Route::get('/reports/transactions', [AdminDashboardController::class, 'transactionReports'])->name('reports.transactions');
@@ -72,7 +81,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/export/transactions', [AdminDashboardController::class, 'exportTransactions'])->name('export.transactions');
     Route::get('/export/occupancy', [AdminDashboardController::class, 'exportOccupancy'])->name('export.occupancy');
     Route::get('/export/complaints', [AdminDashboardController::class, 'exportComplaints'])->name('export.complaints');
-    Route::get('/export/penghuni', [AdminPenghuniController::class, 'export'])->name('export.penghuni');
+
 });
 
 // User Routes Group - Protected by user middleware
@@ -97,27 +106,29 @@ Route::middleware(['auth', 'verified', 'user'])->prefix('user')->name('user.')->
     Route::get('/payment/failed', [UserBookingController::class, 'paymentFailed'])->name('payment.failed');
 });
 
-// Penghuni Routes Group - Protected by penghuni middleware (active penghuni only)
-Route::middleware(['auth', 'verified', 'penghuni'])->prefix('penghuni')->name('penghuni.')->group(function () {
-    // History & Booking Management
+// Penghuni Routes
+Route::middleware(['auth', 'penghuni'])->name('penghuni.')->prefix('penghuni')->group(function () {
     Route::get('/history', [PenghuniHistoryController::class, 'index'])->name('history.index');
+    Route::get('/history/invoice/{pembayaran}', [PenghuniHistoryController::class, 'viewInvoice'])->name('history.invoice');
     Route::get('/history/{booking}', [PenghuniHistoryController::class, 'show'])->name('history.show');
+    
+    // Payment Routes (will be implemented in Phase 7)
     Route::get('/payments', [PenghuniHistoryController::class, 'payments'])->name('payments.index');
-    
-    // Extension Routes (will be implemented in Phase 7)
-    Route::get('/extension/create/{booking}', [PenghuniHistoryController::class, 'createExtension'])->name('extension.create');
-    Route::post('/extension/{booking}', [PenghuniHistoryController::class, 'storeExtension'])->name('extension.store');
-    
-    // Add Penghuni Routes (will be implemented in Phase 7)
-    Route::get('/add-penghuni/{booking}', [PenghuniHistoryController::class, 'addPenghuniForm'])->name('addPenghuni.form');
-    Route::post('/add-penghuni/{booking}', [PenghuniHistoryController::class, 'addPenghuni'])->name('addPenghuni.store');
-    
-    // Checkout Routes (will be implemented in Phase 7)
-    Route::post('/checkout/{booking}', [PenghuniHistoryController::class, 'checkout'])->name('checkout');
     
     // Pengaduan System
     Route::resource('pengaduan', PenghuniPengaduanController::class)->only(['index', 'create', 'store', 'show']);
     Route::post('pengaduan/{pengaduan}/mark-completed', [PenghuniPengaduanController::class, 'markAsCompleted'])->name('pengaduan.markCompleted');
+    
+    // Extension Routes
+    Route::get('/extension/create/{booking}', [PenghuniHistoryController::class, 'showExtendForm'])->name('extension.create');
+    Route::post('/extension/{booking}', [PenghuniHistoryController::class, 'extend'])->name('extension.store');
+    
+    // Add Penghuni Routes
+    Route::get('/add-penghuni/{booking}', [PenghuniHistoryController::class, 'addPenghuniForm'])->name('addPenghuni.form');
+    Route::post('/add-penghuni/{booking}', [PenghuniHistoryController::class, 'addPenghuni'])->name('addPenghuni.store');
+    
+    // Checkout Routes
+    Route::post('/checkout/{booking}', [PenghuniHistoryController::class, 'checkout'])->name('checkout');
 });
 
 Route::middleware('auth')->group(function () {
@@ -126,13 +137,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Payment Routes
+// Midtrans Callback (harus bisa diakses publik)
+Route::post('/payment/callback', [PaymentController::class, 'handleCallback'])->name('payment.callback');
+Route::get('/payment/check-status', [PaymentController::class, 'checkStatus'])->name('payment.check-status');
+Route::get('/payment/success/{orderId}', [PaymentController::class, 'paymentSuccess'])->name('payment.success');
+Route::get('/payment/failed/{orderId}', [PaymentController::class, 'paymentFailed'])->name('payment.failed');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/payment/form/{booking}', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
     Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
-    Route::post('/payment/callback', [PaymentController::class, 'handleCallback'])->name('payment.callback');
-    Route::get('/payment/success/{orderId}', [PaymentController::class, 'paymentSuccess'])->name('payment.success');
-    Route::get('/payment/failed/{orderId}', [PaymentController::class, 'paymentFailed'])->name('payment.failed');
 });
 
 require __DIR__.'/auth.php';

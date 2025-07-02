@@ -15,8 +15,18 @@ class PengaduanController extends Controller
         $user = Auth::user();
         $penghuni = $user->activePenghuni();
 
-        $pengaduan = Pengaduan::where('id_penghuni', $penghuni->id_penghuni)
-            ->with('kamar')
+        // Get all rooms this penghuni is currently occupying (either as primary or secondary tenant)
+        $roomIds = Kamar::whereHas('booking', function ($query) use ($penghuni) {
+            $query->where('status_booking', 'Aktif')
+                  ->where(function ($q) use ($penghuni) {
+                      $q->where('id_penghuni', $penghuni->id_penghuni)
+                        ->orWhere('id_teman', $penghuni->id_penghuni);
+                  });
+        })->pluck('id_kamar')->toArray();
+
+        // Get all complaints for those rooms
+        $pengaduan = Pengaduan::whereIn('id_kamar', $roomIds)
+            ->with(['kamar', 'penghuni.user'])
             ->orderBy('tanggal_pengaduan', 'desc')
             ->get();
 
@@ -77,12 +87,21 @@ class PengaduanController extends Controller
         $user = Auth::user();
         $penghuni = $user->activePenghuni();
 
-        // Check if this pengaduan belongs to the current penghuni
-        if ($pengaduan->id_penghuni !== $penghuni->id_penghuni) {
+        // Get all rooms this penghuni is currently occupying
+        $roomIds = Kamar::whereHas('booking', function ($query) use ($penghuni) {
+            $query->where('status_booking', 'Aktif')
+                  ->where(function ($q) use ($penghuni) {
+                      $q->where('id_penghuni', $penghuni->id_penghuni)
+                        ->orWhere('id_teman', $penghuni->id_penghuni);
+                  });
+        })->pluck('id_kamar')->toArray();
+
+        // Check if this pengaduan belongs to a room occupied by the current penghuni
+        if (!in_array($pengaduan->id_kamar, $roomIds)) {
             abort(403, 'Akses ditolak.');
         }
 
-        $pengaduan->load('kamar.tipeKamar');
+        $pengaduan->load('kamar.tipeKamar', 'penghuni.user');
 
         return view('penghuni.pengaduan.show', compact('pengaduan'));
     }
@@ -95,8 +114,17 @@ class PengaduanController extends Controller
         $user = Auth::user();
         $penghuni = $user->activePenghuni();
 
-        // Check if this pengaduan belongs to the current penghuni
-        if ($pengaduan->id_penghuni !== $penghuni->id_penghuni) {
+        // Get all rooms this penghuni is currently occupying
+        $roomIds = Kamar::whereHas('booking', function ($query) use ($penghuni) {
+            $query->where('status_booking', 'Aktif')
+                  ->where(function ($q) use ($penghuni) {
+                      $q->where('id_penghuni', $penghuni->id_penghuni)
+                        ->orWhere('id_teman', $penghuni->id_penghuni);
+                  });
+        })->pluck('id_kamar')->toArray();
+
+        // Check if this pengaduan belongs to a room occupied by the current penghuni
+        if (!in_array($pengaduan->id_kamar, $roomIds)) {
             abort(403, 'Akses ditolak.');
         }
 

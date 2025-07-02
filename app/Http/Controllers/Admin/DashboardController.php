@@ -93,6 +93,11 @@ class DashboardController extends Controller
             ? (($currentMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100 
             : 0;
 
+        // Get room counts directly (not cached)
+        $kamarKosong = Kamar::where('status', 'Kosong')->count();
+        $kamarDipesan = Kamar::where('status', 'Dipesan')->count();
+        $kamarTerisiActual = Kamar::where('status', 'Terisi')->count();
+        
         return [
             'total_kamar' => [
                 'value' => $totalKamar,
@@ -100,15 +105,22 @@ class DashboardController extends Controller
                 'icon' => 'home',
                 'color' => 'blue'
             ],
-            'kamar_tersedia' => [
-                'value' => Kamar::where('status', 'Kosong')->count(),
-                'label' => 'Kamar Tersedia',
+            'kamar_kosong' => [
+                'value' => $kamarKosong,
+                'label' => 'Kamar Kosong',
                 'icon' => 'home',
                 'color' => 'green',
                 'subtitle' => 'Siap untuk dipesan'
             ],
+            'kamar_dipesan' => [
+                'value' => $kamarDipesan,
+                'label' => 'Kamar Dipesan',
+                'icon' => 'clock',
+                'color' => 'yellow',
+                'subtitle' => 'Sedang diproses'
+            ],
             'kamar_terisi' => [
-                'value' => $kamarTerisi,
+                'value' => $kamarTerisiActual,
                 'label' => 'Kamar Terisi',
                 'icon' => 'users',
                 'color' => 'orange',
@@ -130,7 +142,7 @@ class DashboardController extends Controller
             'revenue_bulan_ini' => [
                 'value' => 'Rp ' . number_format($currentMonthRevenue, 3, ',', '.'),
                 'label' => 'Revenue Bulan Ini',
-                'icon' => 'currency-dollar',
+                'icon' => 'chart-trending-up',
                 'color' => 'green',
                 'subtitle' => sprintf('%.1f%% vs Last Month', $revenueChange)
             ],

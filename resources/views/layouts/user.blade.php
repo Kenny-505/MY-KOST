@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>@yield('title', 'MYKOST - Solusi Hunian Modern')</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -180,7 +180,14 @@
                     </div>
                 @endif
 
+                @if(session('info'))
+                    <div class="mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        {{ session('info') }}
+                    </div>
+                @endif
+
                 @yield('content')
+                {{ $slot ?? '' }}
             </main>
         </div>
 
@@ -235,5 +242,10 @@
             updateUserClock();
             setInterval(updateUserClock, 1000);
         </script>
+
+        <!-- Scripts -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @yield('scripts')
+        @stack('scripts')
     </body>
 </html> 
