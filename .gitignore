@@ -33,5 +33,5 @@ fix_active_bookings.php
 fix-booking-issue.php
 koskosan1 copy.sql
 paket_kamar.sql
-
+.cursorindexingignore
 
